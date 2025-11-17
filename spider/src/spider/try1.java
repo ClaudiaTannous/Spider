@@ -1,6 +1,7 @@
 package spider;
 
 public class try1 {
-	//hi
-
+	private int cellnum;
+// ************
+	//hh
 }
