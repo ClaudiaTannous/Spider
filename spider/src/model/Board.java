@@ -6,7 +6,7 @@ import java.util.Random;
 
 
 public class Board {
-
+	
     private int numberOfMines;
     private Cell[][] cells;
     private int rows;
