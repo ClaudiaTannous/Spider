@@ -92,3 +92,34 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		this.gui.initStatus(sharedLives);
 		this.gui.setDifficulty(currentDifficulty);
 	}
+	public void createBoards() {
+		boardA = new Board(currentDifficulty);
+		boardB = new Board(currentDifficulty);
+		gui.setMines(currentDifficulty.getMines());
+	}
+
+	public void newGame() {
+		this.playing = false;
+
+		if (sysData != null) {
+			sysData.resetMatchUsage();
+		}
+
+		player1 = new Player(player1.getName());
+		player2 = new Player(player2.getName());
+		currentPlayer = player1;
+
+		sharedLives = currentDifficulty.getLives();
+		sharedScore = 0;
+
+		createBoards();
+		updateMineCounters();
+
+		gui.interruptTimer();
+		gui.resetTimer();
+		gui.initGame();
+		gui.setMines(currentDifficulty.getMines());
+		gui.setActiveBoard("A");
+		gui.initStatus(sharedLives);
+		gui.updateStatus(sharedScore, sharedLives);
+	}
