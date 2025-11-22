@@ -52,11 +52,11 @@ public class MineSweeper extends JFrame {
     public final Color CELL_HIDDEN_A   = new Color(12, 94, 117);  
     public final Color CELL_HIDDEN_B   = new Color(51, 45, 99);   
     public final Color CELL_REVEALED   = new Color(230, 245, 248); 
-    public final Color CELL_HOVER      = new Color(19, 104, 126);  // Hover state
-    public final Color Q_HIGHLIGHT     = new Color(255, 183, 77);  // Question cells 
-    public final Color S_HIGHLIGHT     = new Color(129, 212, 250); // Surprise cells 
+    public final Color CELL_HOVER      = new Color(19, 104, 126);  
+    public final Color Q_HIGHLIGHT     = new Color(255, 183, 77);  
+    public final Color S_HIGHLIGHT     = new Color(129, 212, 250); 
 
-    public final Color SUCCESS_COLOR = new Color(0, 191, 165); // Active board border 
+    public final Color SUCCESS_COLOR = new Color(0, 191, 165); 
     public final Color TEXT_WHITE = new Color(245, 245, 245);
     public final Color TEXT_GRAY = new Color(178, 190, 195);
 
@@ -158,7 +158,7 @@ public class MineSweeper extends JFrame {
 
         boardCardA.add(boardAContainer, BorderLayout.CENTER);
 
-        // Board B
+      
         String titleB = (player2Name != null && !player2Name.isBlank()) ? player2Name : "Player 2";
         boardCardB = createBoardCard(titleB, false);
 
@@ -663,7 +663,7 @@ public class MineSweeper extends JFrame {
         this.currentDifficulty = diff;
     }
 
-    // =================== DIALOG HELPERS =================== //
+ 
 
     public void showVictoryDialog(int score, int timeSeconds) {
         String message = String.format(
