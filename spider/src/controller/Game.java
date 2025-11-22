@@ -45,3 +45,50 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	public Game() {
 		this(Difficulty.EASY, "Player A", "Player B");
 	}
+	public Game(Difficulty difficulty, String player1Name, String player2Name) {
+		score = new Score();
+		score.populate();
+
+		MineSweeper.setLook("Nimbus");
+
+		this.currentDifficulty = difficulty;
+		this.sysData = new SysData();
+		this.sharedScore = 0;
+
+		this.playing = false;
+
+		initializePlayers(player1Name, player2Name);
+		createBoards();
+		updateMineCounters();
+
+		gui.initGame();
+		gui.setMines(currentDifficulty.getMines());
+		gui.setActiveBoard("A");
+		gui.initStatus(sharedLives);
+		gui.updateStatus(sharedScore, sharedLives);
+
+		gui.setVisible(true);
+		gui.setIcons();
+		gui.hideAll();
+
+	}
+
+	private void initializePlayers(String name1, String name2) {
+		if (name1 == null || name1.trim().isEmpty())
+			name1 = "Player A";
+		if (name2 == null || name2.trim().isEmpty())
+			name2 = "Player B";
+
+		player1 = new Player(name1);
+		player2 = new Player(name2);
+		currentPlayer = player1;
+
+		sharedLives = currentDifficulty.getLives();
+		sharedScore = 0;
+
+		this.gui = new MineSweeper(this,currentDifficulty.getRows(), currentDifficulty.getCols(),
+				currentDifficulty.getMines(), player1.getName(), player2.getName());
+		this.gui.setButtonListeners(this);
+		this.gui.initStatus(sharedLives);
+		this.gui.setDifficulty(currentDifficulty);
+	}
