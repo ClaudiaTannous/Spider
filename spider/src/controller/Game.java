@@ -226,3 +226,15 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 			}
 		}
 	}
+	
+	private void showAll() {
+		gui.revealAllMines(boardA, gui.getButtonsA());
+		gui.revealAllMines(boardB, gui.getButtonsB());
+	}
+
+	private void switchTurn() {
+		currentPlayer = (currentPlayer == player1) ? player2 : player1;
+		String newBoard = (currentPlayer == player1) ? "A" : "B";
+		gui.setActiveBoard(newBoard);
+		gui.updateStatus(sharedScore, sharedLives);
+	}
