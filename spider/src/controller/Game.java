@@ -42,10 +42,8 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 	private Difficulty currentDifficulty;
 
-	public Game() {
-		this(Difficulty.EASY, "Player A", "Player B");
-	}
-	public Game(Difficulty difficulty, String player1Name, String player2Name) {
+	
+	public Game(Difficulty difficulty, String player1Name, String player2Name) {// Sets up a new game: loads scores and questions, creates players and boards, initializes the GUI and game state.
 		score = new Score();
 		score.populate();
 
@@ -73,7 +71,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 	}
 
-	private void initializePlayers(String name1, String name2) {
+	private void initializePlayers(String name1, String name2) {  //Ensures valid player names, creates the Player objects, initializes shared lives/score, and constructs the MineSweeper GUI.
 		if (name1 == null || name1.trim().isEmpty())
 			name1 = "Player A";
 		if (name2 == null || name2.trim().isEmpty())
@@ -92,13 +90,13 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		this.gui.initStatus(sharedLives);
 		this.gui.setDifficulty(currentDifficulty);
 	}
-	public void createBoards() {
+	public void createBoards() {//Creates a fresh Board for each player based on the current difficulty and updates the GUI mine count.
 		boardA = new Board(currentDifficulty);
 		boardB = new Board(currentDifficulty);
 		gui.setMines(currentDifficulty.getMines());
 	}
 
-	public void newGame() {
+	public void newGame() { //Resets the game state (players, boards, lives, score, questions, timer) and restarts the GUI for a new match.
 		this.playing = false;
 
 		if (sysData != null) {
@@ -124,13 +122,13 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		gui.updateStatus(sharedScore, sharedLives);
 	}
 	
-	private void endGame() {
+	private void endGame() { //Marks the game as not playing, reveals all mines, and saves the score state.
 		playing = false;
 		showAll();
 		score.save();
 	}
 
-	public void gameWon() {
+	public void gameWon() { //Calculates bonus points for remaining lives, updates score/streaks, logs a WIN, shows victory dialog, and saves score/times.
 		int lifeValue = currentDifficulty.getQuestionPoints();
 		int bonus = sharedLives * lifeValue;
 		sharedScore += bonus;
@@ -152,7 +150,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		score.save();
 	}
 
-	public void gameLost() {
+	public void gameLost() { //Updates losing streak and games count, logs a LOST result, shows game-over dialog, and saves the score.
 		score.incCurrentLosingStreak();
 		score.incGamesPlayed();
 
