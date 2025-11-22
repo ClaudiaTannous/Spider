@@ -318,4 +318,81 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		switchTurn();
 	}
 
+	@Override
+	public void mouseClicked(MouseEvent e) {
+
+	  
+	    if (!playing) {
+	        gui.startTimer();
+	        playing = true;
+	    }
+	    if (!playing)
+	        return;
+
+	    JButton button = (JButton) e.getSource();
+	    String boardTag = (String) button.getClientProperty("board");
+	    if (!boardTag.equals(gui.getActiveBoard()))
+	        return;
+
+	    Board board = boardTag.equals("A") ? boardA : boardB;
+	    JButton[][] buttons = boardTag.equals("A") ? gui.getButtonsA() : gui.getButtonsB();
+
+	    String[] parts = button.getName().split(":");
+	    if (parts.length < 2)
+	        return;
+	    String[] co = parts[1].split(",");
+	    int x = Integer.parseInt(co[0]);
+	    int y = Integer.parseInt(co[1]);
+
+	    Cell cell = board.getCells()[x][y];
+	    String content = cell.getContent();
+
+	  
+	    if (!SwingUtilities.isLeftMouseButton(e)) {
+	        return;
+	    }
+
+	   
+	    if (!content.equals("")) {
+	        return;
+	    }
+
+	    button.setIcon(null);
+
+	    boolean isMine = cell.getMine();
+	    int neighbours = cell.getSurroundingMines();
+	    SpecialBoxType specialBox = cell.getSpecialBox();
+
+	    if (specialBox == SpecialBoxType.SURPRISE) {
+	        handleSurpriseBox(x, y, board, button);
+	        switchTurn();
+	    } else if (specialBox == SpecialBoxType.QUESTION) {
+	        handleQuestionBox(x, y, board, button);
+	        switchTurn();
+	    } else if (isMine) {
+	        handleMineClick(x, y, board, button);
+	    } else {
+	     
+	        cell.setContent(Integer.toString(neighbours));
+	        button.setText(Integer.toString(neighbours));
+	        gui.setTextColor(button);
+	        button.setBackground(gui.CELL_REVEALED);
+
+	        
+	        if (neighbours == 0) {
+	            sharedScore += 1;
+	            gui.updateStatus(sharedScore, sharedLives);
+
+	            button.setText("·");
+	            button.setForeground(new Color(160, 170, 200, 100));
+	            button.setFont(new Font("Arial", Font.BOLD, 24));
+	            findZeroes(x, y, board, buttons);
+	        }
+
+	        switchTurn();
+	    }
+
+	    updateMineCounters();
+	    checkGame();
+	}
 	
