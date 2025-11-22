@@ -11,7 +11,6 @@ import java.awt.event.WindowEvent;
 import java.awt.event.WindowListener;
 import java.util.Random;
 import java.sql.Date;
-import view.MainPage;
 import model.Board;
 import model.Cell;
 import model.Difficulty;
@@ -167,7 +166,8 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 	
 
-	private void checkGame() {
+	private void checkGame() { //Checks if either board is fully cleared or lives reach zero, then decides win or loss.
+
 		boolean aDone = checkWinCondition(boardA);
 		boolean bDone = checkWinCondition(boardB);
 
@@ -180,7 +180,8 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		}
 	}
 
-	private boolean checkWinCondition(Board board) {
+	
+	private boolean checkWinCondition(Board board) { //Returns true if all non-mine, non-special cells are revealed
 		Cell[][] cells = board.getCells();
 
 		for (int x = 0; x < board.getCols(); x++) {
@@ -197,7 +198,9 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		return true;
 	}
 	
-	private void findZeroes(int x, int y, Board board, JButton[][] buttons) {
+	private void findZeroes(int x, int y, Board board, JButton[][] buttons) { //Recursively reveals adjacent empty cells surrounding a zero-mine tile.
+
+
 		Cell[][] cells = board.getCells();
 
 		for (int tempX = board.makeValidCoordinateX(x - 1); tempX <= board.makeValidCoordinateX(x + 1); tempX++) {
@@ -225,19 +228,20 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		}
 	}
 	
-	private void showAll() {
+	private void showAll() { //Reveals all mines on both boards at game end
 		gui.revealAllMines(boardA, gui.getButtonsA());
 		gui.revealAllMines(boardB, gui.getButtonsB());
 	}
 
-	private void switchTurn() {
+	private void switchTurn() { // Alternates current player and updates GUI to highlight the active board.
 		currentPlayer = (currentPlayer == player1) ? player2 : player1;
 		String newBoard = (currentPlayer == player1) ? "A" : "B";
 		gui.setActiveBoard(newBoard);
 		gui.updateStatus(sharedScore, sharedLives);
 	}
 	
-	private void handleSurpriseBox(int x, int y, Board board, JButton button) {
+	private void handleSurpriseBox(int x, int y, Board board, JButton button) { //Randomly gives bonus/penalty feedback when stepping on a surprise box.
+
 		Random rand = new Random();
 		boolean isBonus = rand.nextBoolean();
 
@@ -258,7 +262,9 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		gui.showSurpriseDialog(isBonus);
 	}
 
-	private void handleQuestionBox(int x, int y, Board board, JButton button) {
+	private void handleQuestionBox(int x, int y, Board board, JButton button) { //Shows a quiz question and applies feedback for correct/incorrect answers.
+
+
 		var opt = sysData.nextQuestion();
 		if (opt.isEmpty()) {
 			
@@ -294,7 +300,8 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		board.getCells()[x][y].setContent("Q");
 	}
 
-	private void handleMineClick(int x, int y, Board board, JButton button) {
+	private void handleMineClick(int x, int y, Board board, JButton button) { // Reduces a life, shows mine explosion, updates status, and may end the game.
+
 		Cell cell = board.getCells()[x][y];
 
 		sharedLives -= 1; 
@@ -317,7 +324,8 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	}
 
 	@Override
-	public void mouseClicked(MouseEvent e) {
+	public void mouseClicked(MouseEvent e) { // Handles cell clicks: reveals content, triggers events, switches turns, updates mine counts, and checks win/loss.
+
 
 	  
 	    if (!playing) {
@@ -393,7 +401,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	    updateMineCounters();
 	    checkGame();
 	}
-	private int countRemainingMines(Board board) {
+	private int countRemainingMines(Board board) { //Counts unrevealed mines on a specific board
 		int count = 0;
 		Cell[][] cells = board.getCells();
 
@@ -409,13 +417,14 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		return count;
 	}
 	
-	private void updateMineCounters() {
+	private void updateMineCounters() { //Updates displayed mine counters for both boards.
 		int a = countRemainingMines(boardA);
 		int b = countRemainingMines(boardB);
 		gui.updateMinesLeft(a, b);
 	}
 	@Override
-	public void windowClosing(WindowEvent e) {
+	public void windowClosing(WindowEvent e) { //Logs a QUIT result, saves data, interrupts timer, and exits safely.
+
 
 		if (gui != null) {
 			gui.interruptTimer();
@@ -431,7 +440,8 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) {
+	public void actionPerformed(ActionEvent e) { //Handles menu actions like starting a new game.
+
 		JMenuItem menuItem = (JMenuItem) e.getSource();
 
 		if (menuItem.getName().equals("New Game")) {
