@@ -198,3 +198,31 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		}
 		return true;
 	}
+	
+	private void findZeroes(int x, int y, Board board, JButton[][] buttons) {
+		Cell[][] cells = board.getCells();
+
+		for (int tempX = board.makeValidCoordinateX(x - 1); tempX <= board.makeValidCoordinateX(x + 1); tempX++) {
+
+			for (int tempY = board.makeValidCoordinateY(y - 1); tempY <= board.makeValidCoordinateY(y + 1); tempY++) {
+
+				Cell cell = cells[tempX][tempY];
+
+				if (cell.getContent().equals("") && !cell.getMine() && cell.getSpecialBox() == SpecialBoxType.NONE) {
+
+					cell.setContent(Integer.toString(cell.getSurroundingMines()));
+
+					buttons[tempX][tempY].setText(Integer.toString(cell.getSurroundingMines()));
+					gui.setTextColor(buttons[tempX][tempY]);
+					buttons[tempX][tempY].setBackground(gui.CELL_REVEALED);
+
+					if (cell.getSurroundingMines() == 0) {
+						buttons[tempX][tempY].setText("·");
+						buttons[tempX][tempY].setForeground(new Color(160, 170, 200, 100));
+						buttons[tempX][tempY].setFont(new Font("Arial", Font.BOLD, 24));
+						findZeroes(tempX, tempY, board, buttons);
+					}
+				}
+			}
+		}
+	}
