@@ -238,3 +238,84 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		gui.setActiveBoard(newBoard);
 		gui.updateStatus(sharedScore, sharedLives);
 	}
+	
+	private void handleSurpriseBox(int x, int y, Board board, JButton button) {
+		Random rand = new Random();
+		boolean isBonus = rand.nextBoolean();
+
+		if (isBonus) {
+			button.setBackground(Color.green);
+		} else {
+			button.setBackground(Color.orange);
+		}
+
+		button.setIcon(null);
+		button.setText("S");
+		button.setFont(new Font("Serif", Font.BOLD, 18));
+		button.setForeground(Color.RED);
+
+		board.getCells()[x][y].setContent("S");
+
+		
+		gui.showSurpriseDialog(isBonus);
+	}
+
+	private void handleQuestionBox(int x, int y, Board board, JButton button) {
+		var opt = sysData.nextQuestion();
+		if (opt.isEmpty()) {
+			
+			gui.showNoMoreQuestionsDialog();
+			return;
+		}
+
+		model.Question q = opt.get();
+
+		
+		Object answer = gui.askQuestion(q);
+		if (answer == null) {
+			
+			return;
+		}
+
+		int selectedIndex = q.getOptions().indexOf(answer.toString());
+		boolean correct = (selectedIndex == q.getCorrectIndex());
+
+		if (correct) {
+			button.setBackground(Color.green);
+			gui.showCorrectAnswerDialog();
+		} else {
+			button.setBackground(Color.red);
+			gui.showWrongAnswerDialog();
+		}
+
+		button.setIcon(null);
+		button.setText("Q");
+		button.setFont(new Font("Serif", Font.BOLD, 18));
+		button.setForeground(Color.RED);
+
+		board.getCells()[x][y].setContent("Q");
+	}
+
+	private void handleMineClick(int x, int y, Board board, JButton button) {
+		Cell cell = board.getCells()[x][y];
+
+		sharedLives -= 1; 
+
+		button.setIcon(gui.getIconRedMine());
+		button.setBackground(Color.RED);
+		cell.setContent("M");
+
+		
+		gui.showMineHitDialog();
+
+		gui.updateStatus(sharedScore, sharedLives);
+
+		if (sharedLives <= 0) {
+			gameLost();
+			return;
+		}
+
+		switchTurn();
+	}
+
+	
