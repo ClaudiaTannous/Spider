@@ -87,7 +87,7 @@ public class QuestionEditorDialog extends JDialog {
         correctGroup = new ButtonGroup();
 
         for (int i = 0; i < 4; i++) {
-            // >>> הוגדל מעט: 3 שורות במקום 2 <<<
+         
             txtAnswers[i] = new JTextArea(3, 30);
             styleTextArea(txtAnswers[i]);
 
@@ -108,7 +108,7 @@ public class QuestionEditorDialog extends JDialog {
         btnDelete = new JButton("Delete");
         btnCancel = new JButton("Cancel");
 
-        // >>> כפתורים קצת יותר קטנים <<<
+      
         stylePrimaryButton(btnSave, BTN_SAVE_BG);
         styleDangerButton(btnDelete, BTN_DELETE_BG);
         styleSecondaryButton(btnCancel, BTN_CANCEL_BG);

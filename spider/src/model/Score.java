@@ -83,15 +83,14 @@ public class Score {
             bestTimes.remove(bestTimes.size() - 1);
     }
 
-    // -------------------- PLACEHOLDER FUNCTIONS ------------------------ //
-    // These remain only to keep Game.java compatible.
+   
     public boolean populate() {
-        // No file or database loading.
+        
         return true;
     }
 
     public void save() {
-        // No file or database saving.
+     
     }
 
     // -------------------- INNER CLASSES ------------------------ //

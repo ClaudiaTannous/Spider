@@ -8,9 +8,7 @@ import java.util.List;
 
 public class GameHistory extends JDialog {
 
-	/**
-	 * 
-	 */
+	
 	private static final long serialVersionUID = 1L;
 	private static final Color TEXT_PRIMARY = Color.WHITE;
 	private static final Color TEXT_MUTED = new Color(180, 190, 210);

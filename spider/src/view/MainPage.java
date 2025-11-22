@@ -18,7 +18,7 @@ public class MainPage extends JFrame {
         setSize(550, 450);
         setLocationRelativeTo(null);
 
-        // 🖼️ Load animated background
+  
         try {
             backgroundImage = new ImageIcon(
                     getClass().getResource("/resources/animated-bg.gif")
@@ -58,17 +58,16 @@ public class MainPage extends JFrame {
         glassPanel.setPreferredSize(new Dimension(380, 350));
         glassPanel.setLayout(new GridBagLayout());
 
-        // 🔤 TITLE (no icon + bigger + black)
+  
         JLabel title = new JLabel("MineSweeper", SwingConstants.CENTER);
         title.setForeground(Color.white);
         title.setFont(new Font("Segoe UI", Font.BOLD, 44)); // bigger
 
-        // 🔤 SUBTITLE (black)
+      
         JLabel subtitle = new JLabel("Welcome to Minesweeper", SwingConstants.CENTER);
         subtitle.setForeground(Color.white);
         subtitle.setFont(new Font("Segoe UI", Font.PLAIN, 20));
-
-        // Load icons
+ 
         ImageIcon startIcon  = loadIcon("/resources/play.png");
         ImageIcon historyIcon = loadIcon("/resources/swords.png");
         ImageIcon manageIcon = loadIcon("/resources/task-management.png");
@@ -106,7 +105,6 @@ public class MainPage extends JFrame {
                 }
         );
 
-        // Add everything into glass panel
         GridBagConstraints inner = new GridBagConstraints();
         inner.insets = new Insets(10, 10, 10, 10);
         inner.fill = GridBagConstraints.HORIZONTAL;
@@ -127,7 +125,7 @@ public class MainPage extends JFrame {
         inner.gridy = 4;
         glassPanel.add(manageBtn, inner);
 
-        // Add glass panel to background
+     
         GridBagConstraints gbcMain = new GridBagConstraints();
         gbcMain.gridx = 0;
         gbcMain.gridy = 0;
@@ -154,9 +152,9 @@ public class MainPage extends JFrame {
                 Graphics2D g2 = (Graphics2D) g.create();
                 g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-                // Fill rounded rectangle
+               
                 g2.setColor(getBackground());
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20); // 20px rounded corners
+                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 20, 20); 
 
                 g2.dispose();
                 super.paintComponent(g);
@@ -166,7 +164,7 @@ public class MainPage extends JFrame {
         panel.setPreferredSize(new Dimension(260, 50));
         panel.setBackground(bgColor);
         panel.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
-        panel.setOpaque(false); // VERY IMPORTANT for rounded corners
+        panel.setOpaque(false); 
 
         panel.setLayout(new BorderLayout());
 
