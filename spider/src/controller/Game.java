@@ -123,3 +123,78 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		gui.initStatus(sharedLives);
 		gui.updateStatus(sharedScore, sharedLives);
 	}
+	
+	private void endGame() {
+		playing = false;
+		showAll();
+		score.save();
+	}
+
+	public void gameWon() {
+		int lifeValue = currentDifficulty.getQuestionPoints();
+		int bonus = sharedLives * lifeValue;
+		sharedScore += bonus;
+
+		score.incCurrentStreak();
+		score.incCurrentWinningStreak();
+		score.incGamesWon();
+		score.incGamesPlayed();
+
+		gui.interruptTimer();
+		endGame();
+
+		sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "WIN",
+				gui.getTimePassed());
+
+		gui.showVictoryDialog(sharedScore, gui.getTimePassed());
+
+		score.addTime(gui.getTimePassed(), new Date(System.currentTimeMillis()));
+		score.save();
+	}
+
+	public void gameLost() {
+		score.incCurrentLosingStreak();
+		score.incGamesPlayed();
+
+		gui.interruptTimer();
+		endGame();
+
+		sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "LOST",
+				gui.getTimePassed());
+
+		gui.showGameOverDialog(sharedScore);
+
+		score.save();
+	}
+
+	
+
+	private void checkGame() {
+		boolean aDone = checkWinCondition(boardA);
+		boolean bDone = checkWinCondition(boardB);
+
+		if (aDone || bDone || sharedLives <= 0) {
+			if (sharedLives > 0) {
+				gameWon();
+			} else {
+				gameLost();
+			}
+		}
+	}
+
+	private boolean checkWinCondition(Board board) {
+		Cell[][] cells = board.getCells();
+
+		for (int x = 0; x < board.getCols(); x++) {
+			for (int y = 0; y < board.getRows(); y++) {
+				String content = cells[x][y].getContent();
+				boolean isMine = cells[x][y].getMine();
+				SpecialBoxType specialBox = cells[x][y].getSpecialBox();
+
+				if (!isMine && specialBox == SpecialBoxType.NONE && content.equals("")) {
+					return false;
+				}
+			}
+		}
+		return true;
+	}
