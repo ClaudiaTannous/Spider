@@ -266,7 +266,7 @@ public class QuestionEditorDialog extends JDialog {
             gbcAnsScroll.gridwidth = 2;
             gbcAnsScroll.fill = GridBagConstraints.BOTH;
             gbcAnsScroll.weightx = 1.0;
-            gbcAnsScroll.weighty = 0.18;   // טיפה יותר גובה לכל תשובה
+            gbcAnsScroll.weighty = 0.18;    
             cardPanel.add(ansScroll, gbcAnsScroll);
 
             GridBagConstraints gbcAnsRadio = new GridBagConstraints();
@@ -425,7 +425,6 @@ public class QuestionEditorDialog extends JDialog {
         btn.setFocusPainted(false);
         btn.setBorder(new CompoundBorder(
                 new LineBorder(bg.darker(), 1, true),
-                // <<< פחות padding כדי להקטין את הכפתור >>>
                 new EmptyBorder(6, 18, 6, 18)
         ));
         btn.setFont(new Font("Segoe UI", Font.BOLD, 12));

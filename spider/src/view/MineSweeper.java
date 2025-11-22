@@ -130,7 +130,7 @@ public class MineSweeper extends JFrame {
         boardAContainer.setOpaque(false);
 
         boardPanelA = new JPanel(new GridLayout(rows, cols, 3, 3));
-        boardPanelA.setBackground(BOARD_BG_A); // צבע לוח A
+        boardPanelA.setBackground(BOARD_BG_A); 
         boardPanelA.setBorder(new EmptyBorder(15, 15, 15, 15));
         boardPanelA.setAlignmentX(0.5f);
         boardPanelA.setAlignmentY(0.5f);
@@ -167,7 +167,7 @@ public class MineSweeper extends JFrame {
         boardBContainer.setOpaque(false);
 
         boardPanelB = new JPanel(new GridLayout(rows, cols, 3, 3));
-        boardPanelB.setBackground(BOARD_BG_B); // צבע לוח B
+        boardPanelB.setBackground(BOARD_BG_B); 
         boardPanelB.setBorder(new EmptyBorder(15, 15, 15, 15));
         boardPanelB.setAlignmentX(0.5f);
         boardPanelB.setAlignmentY(0.5f);
@@ -213,9 +213,8 @@ public class MineSweeper extends JFrame {
     private JPanel createBoardCard(String title, boolean isBoardA) {
         JPanel card = new JPanel(new BorderLayout(0, 10));
 
-        // צבע רקע ומסגרת שונים לכל שחקן
         Color cardBg = isBoardA ? BOARD_BG_A : BOARD_BG_B;
-        Color borderColor = isBoardA ? new Color(0, 191, 165) : new Color(171, 71, 188); // טורקיז / סגול
+        Color borderColor = isBoardA ? new Color(0, 191, 165) : new Color(171, 71, 188); 
 
         card.setBackground(cardBg);
         card.setBorder(new LineBorder(borderColor, 2, true));
