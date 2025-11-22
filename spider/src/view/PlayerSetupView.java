@@ -37,7 +37,7 @@ public class PlayerSetupView extends JFrame {
 
     private Difficulty selectedDifficulty = Difficulty.EASY;
 
-    // Colors (palette)
+  
     private final Color bgMain        = new Color(6, 40, 61);
     private final Color bgCard       = new Color(15, 76, 92);
     private final Color accentGreen  = new Color(46, 204, 113);   
@@ -69,13 +69,13 @@ public class PlayerSetupView extends JFrame {
     }
 
     private void initUI() {
-        // Window settings
+    
         setTitle("Minesweeper - Player Setup");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setMinimumSize(new Dimension(800, 600));
 
-        // Main container with background image
+     
         JPanel mainPanel = new JPanel(new BorderLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -109,7 +109,7 @@ public class PlayerSetupView extends JFrame {
 
         mainPanel.add(headerPanel, BorderLayout.NORTH);
 
-        // Center form panel
+  
         JPanel centerPanel = new JPanel(new GridBagLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -129,7 +129,7 @@ public class PlayerSetupView extends JFrame {
 
         GridBagConstraints gbc;
 
-        // Player 1 label
+       
         JLabel p1Label = new JLabel("Player 1 name:");
         p1Label.setForeground(textPrimary);
         p1Label.setFont(new Font("Segoe UI", Font.PLAIN, 18));
@@ -143,7 +143,7 @@ public class PlayerSetupView extends JFrame {
         gbc.gridy = 0;
         centerPanel.add(p1Label, gbc);
 
-        // Player 1 field
+      
         player1Field = new JTextField();
         player1Field.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         player1Field.setBackground(new Color(224, 242, 241));
@@ -159,7 +159,7 @@ public class PlayerSetupView extends JFrame {
         gbc.gridy = 0;
         centerPanel.add(player1Field, gbc);
 
-        // Player 2 label
+       
         JLabel p2Label = new JLabel("Player 2 name:");
         p2Label.setForeground(textPrimary);
         p2Label.setFont(new Font("Segoe UI", Font.PLAIN, 18));
@@ -173,7 +173,7 @@ public class PlayerSetupView extends JFrame {
         gbc.gridy = 1;
         centerPanel.add(p2Label, gbc);
 
-        // Player 2 field
+       
         player2Field = new JTextField();
         player2Field.setFont(new Font("Segoe UI", Font.PLAIN, 18));
         player2Field.setBackground(new Color(224, 242, 241));
@@ -189,7 +189,7 @@ public class PlayerSetupView extends JFrame {
         gbc.gridy = 1;
         centerPanel.add(player2Field, gbc);
 
-        // Difficulty label
+       
         JLabel difficultyLabel = new JLabel("Choose difficulty level");
         difficultyLabel.setForeground(textPrimary);
         difficultyLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
@@ -203,7 +203,7 @@ public class PlayerSetupView extends JFrame {
         gbc.gridy = 2;
         centerPanel.add(difficultyLabel, gbc);
 
-        // Difficulty cards container
+       
         JPanel difficultyCardsPanel = new JPanel();
         difficultyCardsPanel.setOpaque(false);
         difficultyCardsPanel.setLayout(new GridLayout(3, 1, 12, 12));
@@ -225,11 +225,10 @@ public class PlayerSetupView extends JFrame {
         gbc.gridy = 2;
         centerPanel.add(difficultyCardsPanel, gbc);
 
-        // Bottom area with back button on the left and start/exit on the right
+     
         JPanel bottomPanel = new JPanel(new BorderLayout());
         bottomPanel.setOpaque(false);
-
-        // Left side: Back button
+ 
         JPanel leftButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
         leftButtonsPanel.setOpaque(false);
 
@@ -245,7 +244,7 @@ public class PlayerSetupView extends JFrame {
         ));
         leftButtonsPanel.add(backButton);
 
-        // Right side: Exit + Start buttons
+       
         JPanel rightButtonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
         rightButtonsPanel.setOpaque(false);
 
@@ -280,7 +279,7 @@ public class PlayerSetupView extends JFrame {
         mainPanel.add(bottomPanel, BorderLayout.SOUTH);
 
         attachListeners();
-        updateDifficultySelectionUI(); // initial selection = EASY
+        updateDifficultySelectionUI(); 
 
         setLocationRelativeTo(null);
     }

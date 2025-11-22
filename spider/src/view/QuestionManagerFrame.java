@@ -43,10 +43,10 @@ public class QuestionManagerFrame extends JFrame {
     private static final Color TEXT_MUTED = new Color(170, 185, 195);
 
     // Buttons based on palette
-    private static final Color BTN_NEW_BG    = new Color(0xFF, 0xCF, 0x4A); // yellow
-    private static final Color BTN_EDIT_BG   = new Color(0x36, 0x53, 0x69); // blue/gray
-    private static final Color BTN_DELETE_BG = new Color(0xFF, 0x52, 0x62); // red
-    private static final Color BTN_CLOSE_BG  = new Color(0x2B, 0x45, 0x53); // dark gray
+    private static final Color BTN_NEW_BG    = new Color(0xFF, 0xCF, 0x4A); 
+    private static final Color BTN_EDIT_BG   = new Color(0x36, 0x53, 0x69); 
+    private static final Color BTN_DELETE_BG = new Color(0xFF, 0x52, 0x62); 
+    private static final Color BTN_CLOSE_BG  = new Color(0x2B, 0x45, 0x53); 
 
     public QuestionManagerFrame(SysData sysData) {
         super("Question Bank");
