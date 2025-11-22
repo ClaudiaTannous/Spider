@@ -41,7 +41,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	private SysData sysData;
 
 	private Difficulty currentDifficulty;
-
+	
 	
 	public Game(Difficulty difficulty, String player1Name, String player2Name) {// Sets up a new game: loads scores and questions, creates players and boards, initializes the GUI and game state.
 		score = new Score();
