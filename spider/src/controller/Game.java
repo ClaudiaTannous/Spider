@@ -395,4 +395,105 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	    updateMineCounters();
 	    checkGame();
 	}
+	private int countRemainingMines(Board board) {
+		int count = 0;
+		Cell[][] cells = board.getCells();
+
+		for (int x = 0; x < board.getCols(); x++) {
+			for (int y = 0; y < board.getRows(); y++) {
+				Cell c = cells[x][y];
+
+				if (c.getMine() && !c.getContent().equals("M")) {
+					count++;
+				}
+			}
+		}
+		return count;
+	}
+	
+	private void updateMineCounters() {
+		int a = countRemainingMines(boardA);
+		int b = countRemainingMines(boardB);
+		gui.updateMinesLeft(a, b);
+	}
+	@Override
+	public void windowClosing(WindowEvent e) {
+
+		if (gui != null) {
+			gui.interruptTimer();
+		}
+
+		int seconds = (gui != null) ? gui.getTimePassed() : 0;
+
+		sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "QUIT", seconds);
+
+		score.save();
+
+		System.exit(0);
+	}
+
+	@Override
+	public void actionPerformed(ActionEvent e) {
+		JMenuItem menuItem = (JMenuItem) e.getSource();
+
+		if (menuItem.getName().equals("New Game")) {
+			if (playing) {
+				Object[] options = { "Start new game", "Continue playing" };
+
+				int startNew = JOptionPane.showOptionDialog(null, "What would you like to do?", "New Game",
+						JOptionPane.YES_NO_OPTION, JOptionPane.QUESTION_MESSAGE, null, options, options[1]);
+
+				if (startNew == JOptionPane.YES_OPTION) {
+					newGame();
+					score.incGamesPlayed();
+					score.save();
+				}
+			} else {
+			  newGame();
+			}
+		}
+			
+	
+	}
+	@Override
+	public void mousePressed(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseReleased(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseEntered(MouseEvent e) {
+	}
+
+	@Override
+	public void mouseExited(MouseEvent e) {
+	}
+
+	@Override
+	public void windowOpened(WindowEvent e) {
+	}
+
+	@Override
+	public void windowClosed(WindowEvent e) {
+	}
+
+	@Override
+	public void windowIconified(WindowEvent e) {
+	}
+
+	@Override
+	public void windowDeiconified(WindowEvent e) {
+	}
+
+	@Override
+	public void windowActivated(WindowEvent e) {
+	}
+
+	@Override
+	public void windowDeactivated(WindowEvent e) {
+	}
+}
+
 	
