@@ -8,6 +8,7 @@ import controller.Game;
 import model.Board;
 import model.Cell;
 import model.Difficulty;
+import model.SpecialBoxType;
 
 public class MineSweeper extends JFrame {
     private static final long serialVersionUID = 1L;
@@ -17,6 +18,8 @@ public class MineSweeper extends JFrame {
 
     private JLabel minesLeftALabel;
     private JLabel minesLeftBLabel;
+    private JToggleButton flagToggle;
+    private JLabel flagLabel;
 
     private int rows;
     private int cols;
@@ -46,17 +49,18 @@ public class MineSweeper extends JFrame {
 
     public final Color BOARD_BG = new Color(13, 42, 56);
 
-    public final Color BOARD_BG_A = new Color(5, 70, 94);   
-    public final Color BOARD_BG_B = new Color(32, 26, 73);  
+    // colors come from PlayerSetupView 
+    public final Color BOARD_BG_A = PlayerSetupView.getPlayer1BoardColorChoice();
+    public final Color BOARD_BG_B = PlayerSetupView.getPlayer2BoardColorChoice();
 
-    public final Color CELL_HIDDEN_A   = new Color(12, 94, 117);  
-    public final Color CELL_HIDDEN_B   = new Color(51, 45, 99);   
-    public final Color CELL_REVEALED   = new Color(230, 245, 248); 
-    public final Color CELL_HOVER      = new Color(19, 104, 126);  
-    public final Color Q_HIGHLIGHT     = new Color(255, 183, 77);  
-    public final Color S_HIGHLIGHT     = new Color(129, 212, 250); 
+    public final Color CELL_HIDDEN_A   = PlayerSetupView.getPlayer1BoardColorChoice().darker();
+    public final Color CELL_HIDDEN_B   = PlayerSetupView.getPlayer2BoardColorChoice().darker();
+    public final Color CELL_REVEALED   = new Color(230, 245, 248);
+    public final Color CELL_HOVER      = new Color(19, 104, 126);
+    public final Color Q_HIGHLIGHT     = new Color(255, 183, 77);
+    public final Color S_HIGHLIGHT     = new Color(129, 212, 250);
 
-    public final Color SUCCESS_COLOR = new Color(0, 191, 165); 
+    public final Color SUCCESS_COLOR = new Color(0, 191, 165);
     public final Color TEXT_WHITE = new Color(245, 245, 245);
     public final Color TEXT_GRAY = new Color(178, 190, 195);
 
@@ -103,6 +107,9 @@ public class MineSweeper extends JFrame {
         mainContainer.setBackground(DARK_NAVY);
         mainContainer.setBorder(new EmptyBorder(30, 30, 30, 30));
 
+        JPanel topBar = createTopBar();
+        mainContainer.add(topBar, BorderLayout.NORTH);
+
         JPanel boardsContainer = createBoardsPanel();
         JPanel statusContainer = createBottomStatusPanel();
 
@@ -117,11 +124,76 @@ public class MineSweeper extends JFrame {
         }
     }
 
+    private JPanel createTopBar() {
+        JPanel topBar = new JPanel(new BorderLayout());
+        topBar.setBackground(new Color(15, 30, 50));
+        topBar.setBorder(new EmptyBorder(5, 15, 5, 15));
+
+        JLabel titleLabel = new JLabel("Minesweeper");
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        titleLabel.setForeground(TEXT_WHITE);
+
+        JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 0));
+        leftPanel.setOpaque(false);
+        leftPanel.add(titleLabel);
+
+        JPanel rightPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 0));
+        rightPanel.setOpaque(false);
+
+        flagLabel = new JLabel("FLAG MODE");
+        flagLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        flagLabel.setForeground(TEXT_WHITE);
+
+        flagToggle = new JToggleButton("🚩 OFF");
+        flagToggle.setFont(new Font("Segoe UI Emoji", Font.BOLD, 14));
+        flagToggle.setForeground(Color.WHITE);
+
+        flagToggle.setOpaque(true);
+        flagToggle.setContentAreaFilled(false);
+        flagToggle.setFocusPainted(false);
+        flagToggle.setBackground(new Color(25, 38, 56));
+
+        flagToggle.setBorder(BorderFactory.createCompoundBorder(
+                new LineBorder(new Color(200, 80, 80), 2, true),
+                new EmptyBorder(6, 12, 6, 12)
+        ));
+
+        flagToggle.addActionListener(e -> {
+            boolean on = flagToggle.isSelected();
+            if (game != null) {
+                game.setFlagMode(on);
+            }
+
+            if (on) {
+                flagToggle.setText("🚩 ON");
+                flagToggle.setBorder(BorderFactory.createCompoundBorder(
+                        new LineBorder(new Color(0, 200, 100), 2, true),
+                        new EmptyBorder(6, 12, 6, 12)
+                ));
+            } else {
+                flagToggle.setText("🚩 OFF");
+                flagToggle.setBorder(BorderFactory.createCompoundBorder(
+                        new LineBorder(new Color(200, 80, 80), 2, true),
+                        new EmptyBorder(6, 12, 6, 12)
+                ));
+            }
+
+            flagToggle.setBackground(new Color(25, 38, 56));
+        });
+
+        rightPanel.add(flagLabel);
+        rightPanel.add(flagToggle);
+
+        topBar.add(leftPanel, BorderLayout.WEST);
+        topBar.add(rightPanel, BorderLayout.EAST);
+
+        return topBar;
+    }
+
     private JPanel createBoardsPanel() {
         JPanel boardsContainer = new JPanel(new GridLayout(1, 2, 40, 0));
         boardsContainer.setOpaque(false);
 
-        // Board A
         String titleA = (player1Name != null && !player1Name.isBlank()) ? player1Name : "Player 1";
         boardCardA = createBoardCard(titleA, true);
 
@@ -130,7 +202,7 @@ public class MineSweeper extends JFrame {
         boardAContainer.setOpaque(false);
 
         boardPanelA = new JPanel(new GridLayout(rows, cols, 3, 3));
-        boardPanelA.setBackground(BOARD_BG_A); 
+        boardPanelA.setBackground(BOARD_BG_A);
         boardPanelA.setBorder(new EmptyBorder(15, 15, 15, 15));
         boardPanelA.setAlignmentX(0.5f);
         boardPanelA.setAlignmentY(0.5f);
@@ -158,7 +230,6 @@ public class MineSweeper extends JFrame {
 
         boardCardA.add(boardAContainer, BorderLayout.CENTER);
 
-      
         String titleB = (player2Name != null && !player2Name.isBlank()) ? player2Name : "Player 2";
         boardCardB = createBoardCard(titleB, false);
 
@@ -167,7 +238,7 @@ public class MineSweeper extends JFrame {
         boardBContainer.setOpaque(false);
 
         boardPanelB = new JPanel(new GridLayout(rows, cols, 3, 3));
-        boardPanelB.setBackground(BOARD_BG_B); 
+        boardPanelB.setBackground(BOARD_BG_B);
         boardPanelB.setBorder(new EmptyBorder(15, 15, 15, 15));
         boardPanelB.setAlignmentX(0.5f);
         boardPanelB.setAlignmentY(0.5f);
@@ -201,6 +272,7 @@ public class MineSweeper extends JFrame {
         return boardsContainer;
     }
 
+    //updates the number of mines left to reveal on the boards
     public void updateMinesLeft(int minesA, int minesB) {
         if (minesLeftALabel != null) {
             minesLeftALabel.setText("  " + minesA);
@@ -214,7 +286,7 @@ public class MineSweeper extends JFrame {
         JPanel card = new JPanel(new BorderLayout(0, 10));
 
         Color cardBg = isBoardA ? BOARD_BG_A : BOARD_BG_B;
-        Color borderColor = isBoardA ? new Color(0, 191, 165) : new Color(171, 71, 188); 
+        Color borderColor = isBoardA ? new Color(0, 191, 165) : new Color(171, 71, 188);
 
         card.setBackground(cardBg);
         card.setBorder(new LineBorder(borderColor, 2, true));
@@ -337,6 +409,7 @@ public class MineSweeper extends JFrame {
         return statusPanel;
     }
 
+    //updates lives display
     private void updateHeartsDisplay(int current, int max) {
         String fullHeart = "\u2665";  // ♥
         String emptyHeart = "\u2661"; // ♡
@@ -353,7 +426,7 @@ public class MineSweeper extends JFrame {
 
         if (heartsLabel != null) {
             heartsLabel.setFont(new Font("Segoe UI", Font.PLAIN, 22));
-            heartsLabel.setForeground(Color.RED); //Red hearts 
+            heartsLabel.setForeground(Color.RED);
             heartsLabel.setText(hearts.toString());
         }
     }
@@ -363,7 +436,6 @@ public class MineSweeper extends JFrame {
         button.setPreferredSize(new Dimension(50, 50));
 
         boolean isA = "A".equals(board);
-        // פה השינוי החשוב: צבע תאים שונה לכל שחקן
         button.setBackground(isA ? CELL_HIDDEN_A : CELL_HIDDEN_B);
 
         button.setForeground(TEXT_WHITE);
@@ -480,11 +552,11 @@ public class MineSweeper extends JFrame {
         for (int x = 0; x < cols; x++) {
             for (int y = 0; y < rows; y++) {
                 buttonsA[x][y].setText("");
-                buttonsA[x][y].setBackground(CELL_HIDDEN_A); 
+                buttonsA[x][y].setBackground(CELL_HIDDEN_A);
                 buttonsA[x][y].setIcon(null);
 
                 buttonsB[x][y].setText("");
-                buttonsB[x][y].setBackground(CELL_HIDDEN_B); 
+                buttonsB[x][y].setBackground(CELL_HIDDEN_B);
                 buttonsB[x][y].setIcon(null);
             }
         }
@@ -571,23 +643,49 @@ public class MineSweeper extends JFrame {
         }
     }
 
-    public void revealAllMines(Board board, JButton[][] buttons) {
+    public void revealAllBoard(Board board, JButton[][] buttons) {
         Cell[][] cells = board.getCells();
+
         for (int x = 0; x < board.getCols(); x++) {
             for (int y = 0; y < board.getRows(); y++) {
                 JButton b = buttons[x][y];
+                Cell cell = cells[x][y];
+
                 b.setEnabled(false);
-                if (cells[x][y].getMine()) {
-                    if ("F".equals(cells[x][y].getContent())) {
-                        b.setBackground(Color.green);
+
+                if (cell.getMine()) {
+                    b.setIcon(getIconMine());
+                    b.setBackground(Color.BLACK);
+                } else {
+                    SpecialBoxType special = cell.getSpecialBox();
+                    String content = cell.getContent();
+                    if (content == null) content = "";
+
+                    if (special == SpecialBoxType.SURPRISE && !"USED".equals(content)) {
+                        b.setIcon(null);
+                        b.setBackground(Color.ORANGE);
+                        b.setText("🎁");
+                        b.setFont(new Font("Serif", Font.BOLD, 18));
+                        b.setForeground(Color.RED);
+                    } else if (special == SpecialBoxType.QUESTION && !"USED".equals(content)) {
+                        b.setIcon(null);
+                        b.setBackground(Color.YELLOW);
+                        b.setText("❓");
+                        b.setFont(new Font("Serif", Font.BOLD, 18));
+                        b.setForeground(Color.RED);
                     } else {
-                        b.setIcon(getIconMine());
-                        b.setBackground(Color.black);
+                        int n = cell.getSurroundingMines();
+                        b.setBackground(CELL_REVEALED);
+
+                        if (n == 0) {
+                            b.setText("·");
+                            b.setForeground(new Color(160, 170, 200, 100));
+                            b.setFont(new Font("Arial", Font.BOLD, 24));
+                        } else {
+                            b.setText(Integer.toString(n));
+                            setTextColor(b);
+                        }
                     }
-                } else if ("F".equals(cells[x][y].getContent())) {
-                    b.setBackground(Color.orange);
-                    b.setForeground(Color.black);
-                    b.setText("X");
                 }
             }
         }
@@ -663,8 +761,6 @@ public class MineSweeper extends JFrame {
         this.currentDifficulty = diff;
     }
 
- 
-
     public void showVictoryDialog(int score, int timeSeconds) {
         String message = String.format(
                 "<html><center><h2>You win!</h2><br>" +
@@ -722,16 +818,36 @@ public class MineSweeper extends JFrame {
     }
 
     public Object askQuestion(model.Question q) {
-        return JOptionPane.showInputDialog(
-                this,
-                q.getText(),
-                "Question Box",
-                JOptionPane.QUESTION_MESSAGE,
-                null,
-                q.getOptions().toArray(new String[0]),
-                q.getOptions().get(0)
-        );
+        String[] options = q.getOptions().toArray(new String[0]);
+
+        while (true) {
+            Object answer = JOptionPane.showInputDialog(
+                    this,
+                    q.getText(),
+                    "Question Box",
+                    JOptionPane.QUESTION_MESSAGE,
+                    null,
+                    options,
+                    options[0]   // default selected
+            );
+
+            // If user closes the dialog or presses Cancel → answer == null
+            if (answer == null) {
+                JOptionPane.showMessageDialog(
+                        this,
+                        "You must choose an answer to continue.",
+                        "Question Box",
+                        JOptionPane.WARNING_MESSAGE
+                );
+                // loop again – show the dialog once more
+                continue;
+            }
+
+            // Valid selection → return it
+            return answer;
+        }
     }
+
 
     public void showCorrectAnswerDialog() {
         JOptionPane.showMessageDialog(
