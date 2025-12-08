@@ -1020,6 +1020,42 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	            }
 	        }
 	    }
+	  
+	  private void revealRandom3x3(Board board) {
+	        int centerX = rng.nextInt(board.getCols());
+	        int centerY = rng.nextInt(board.getRows());
+
+	        JButton[][] btns = (board == boardA) ? gui.getButtonsA() : gui.getButtonsB();
+	        Cell[][] cells = board.getCells();
+
+	        for (int x = Math.max(0, centerX - 1); x <= Math.min(board.getCols() - 1, centerX + 1); x++) {
+	            for (int y = Math.max(0, centerY - 1); y <= Math.min(board.getRows() - 1, centerY + 1); y++) {
+
+	                Cell cell = cells[x][y];
+	                JButton btn = btns[x][y];
+
+	                if (!cell.getContent().equals(""))
+	                    continue;
+
+	                if (cell.getMine()) {
+	                    btn.setIcon(gui.getIconMine());
+	                    cell.setContent("M");
+	                    continue;
+	                }
+
+	                int n = cell.getSurroundingMines();
+	                cell.setContent(Integer.toString(n));
+
+	                btn.setBackground(gui.CELL_REVEALED);
+	                if (n == 0) {
+	                    btn.setText("·");
+	                } else {
+	                    btn.setText(Integer.toString(n));
+	                    gui.setTextColor(btn);
+	                }
+	            }
+	        }
+	    }
 
 	@Override
 	public void mousePressed(MouseEvent e) {
