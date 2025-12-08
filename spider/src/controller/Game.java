@@ -368,10 +368,10 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		}
 	}
 
-	private void showAll() { // Reveals all mines on both boards at game end
-		gui.revealAllMines(boardA, gui.getButtonsA());
-		gui.revealAllMines(boardB, gui.getButtonsB());
-	}
+	 private void showAll() {
+	        gui.revealAllBoard(boardA, gui.getButtonsA());
+	        gui.revealAllBoard(boardB, gui.getButtonsB());
+	    }
 
 	private void switchTurn() { // Alternates current player and updates GUI to highlight the active board.
 		currentPlayer = (currentPlayer == player1) ? player2 : player1;
