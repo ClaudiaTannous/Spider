@@ -11,45 +11,50 @@ import java.awt.event.MouseEvent;
 public class PlayerSetupView extends JFrame {
 
     private static final long serialVersionUID = 1L;
+
     private JTextField player1Field;
     private JTextField player2Field;
 
-    
     private JPanel easyCard;
     private JPanel mediumCard;
     private JPanel hardCard;
-    private JLabel easyTitleLabel;
-    private JLabel mediumTitleLabel;
-    private JLabel hardTitleLabel;
-    private JLabel easySubtitleLabel;
-    private JLabel mediumSubtitleLabel;
-    private JLabel hardSubtitleLabel;
-    private JLabel easyHeartsLabel;
-    private JLabel mediumHeartsLabel;
-    private JLabel hardHeartsLabel;
-    private JLabel easyCheckLabel;
-    private JLabel mediumCheckLabel;
-    private JLabel hardCheckLabel;
+
+    private JLabel easyLabel;
+    private JLabel mediumLabel;
+    private JLabel hardLabel;
 
     private JButton startButton;
-    private JButton exitButton;
     private JButton backButton;
 
     private Difficulty selectedDifficulty = Difficulty.EASY;
 
-  
-    private final Color bgMain        = new Color(6, 40, 61);
-    private final Color bgCard       = new Color(15, 76, 92);
-    private final Color accentGreen  = new Color(46, 204, 113);   
-    private final Color accentBorder = new Color(0, 120, 140);
-    private final Color cardTextMain = new Color(33, 33, 33);
-    private final Color cardTextSub  = new Color(120, 120, 120);
-    private final Color cardBgNormal = new Color(250, 250, 252);
-    private final Color textPrimary   = new Color(240, 244, 248);
-    private final Color textSecondary = new Color(189, 204, 220);
-    private final Color heartsRed     = new Color(200, 0, 60);
+    // Palette 
+    private final Color bgMain       = new Color(22, 73, 63);
+    private final Color cardBgDark   = new Color(34, 92, 82);
+    private final Color cardBgLight  = new Color(233, 220, 199);
+    private final Color accentGreen  = new Color(7, 66, 57);
+    private final Color accentBorder = new Color(5, 48, 41);
+    private final Color textPrimary  = new Color(255, 255, 255);
 
-    
+    // Board color options
+    private static final Color[] BOARD_COLORS = {
+            new Color(5, 70, 94),
+            new Color(32, 26, 73),
+            new Color(74, 20, 140)
+    };
+    private static final String[] BOARD_COLOR_NAMES = {
+            "Teal", "Purple", "Deep Blue"
+    };
+
+    private int p1ColorIndex = 0;
+    private int p2ColorIndex = 1;
+    private JButton[] p1ColorButtons;
+    private JButton[] p2ColorButtons;
+
+    // Values that MineSweeper or Game can read
+    public static Color player1BoardColorChoice = BOARD_COLORS[0];
+    public static Color player2BoardColorChoice = BOARD_COLORS[1];
+
     private Image backgroundImage;
 
     public PlayerSetupView() {
@@ -60,22 +65,21 @@ public class PlayerSetupView extends JFrame {
     private void loadBackgroundImage() {
         try {
             backgroundImage = new ImageIcon(
-                    getClass().getResource("/resources/setupBackground.png")
+                    getClass().getResource("/resources/setUpBackground.png")
             ).getImage();
         } catch (Exception e) {
-            System.out.println("Warning: Could not load /resources/setupBackground.png");
+            System.out.println("Warning: Could not load /resources/setUpBackground.png");
             backgroundImage = null;
         }
     }
 
     private void initUI() {
-    
+
         setTitle("Minesweeper - Player Setup");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setExtendedState(JFrame.MAXIMIZED_BOTH);
         setMinimumSize(new Dimension(800, 600));
 
-     
         JPanel mainPanel = new JPanel(new BorderLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
@@ -91,294 +95,395 @@ public class PlayerSetupView extends JFrame {
         mainPanel.setBorder(BorderFactory.createEmptyBorder(40, 80, 40, 80));
         setContentPane(mainPanel);
 
-        // Header (title + subtitle)
-        JLabel titleLabel = new JLabel("Minesweeper", SwingConstants.CENTER);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 42));
+        // ===== Header =====
+        JLabel titleLabel = new JLabel("Enter Players Names And Choose Difficulty", SwingConstants.LEFT);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 48));
         titleLabel.setForeground(textPrimary);
-
-        JLabel subtitleLabel = new JLabel("Enter player names and choose difficulty", SwingConstants.CENTER);
-        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        subtitleLabel.setForeground(textSecondary);
 
         JPanel headerPanel = new JPanel();
         headerPanel.setLayout(new BoxLayout(headerPanel, BoxLayout.Y_AXIS));
         headerPanel.setOpaque(false);
         headerPanel.add(titleLabel);
-        headerPanel.add(Box.createVerticalStrut(10));
-        headerPanel.add(subtitleLabel);
 
         mainPanel.add(headerPanel, BorderLayout.NORTH);
 
-  
-        JPanel centerPanel = new JPanel(new GridBagLayout()) {
+        // ===== Center: glass container =====
+        JPanel centerPanel = new JPanel(new BorderLayout()) {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
-                g2.setColor(new Color(0, 0, 0, 160));
-                g2.fillRoundRect(0, 0, getWidth(), getHeight(), 30, 30);
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                int arc = 30;
+                int w = getWidth();
+                int h = getHeight();
+
+                GradientPaint gp = new GradientPaint(
+                        0, 0, new Color(255, 255, 255, 80),
+                        0, h, new Color(255, 255, 255, 20)
+                );
+                g2.setPaint(gp);
+                g2.fillRoundRect(0, 0, w, h, arc, arc);
+
+                g2.setColor(new Color(255, 255, 255, 90));
+                g2.setStroke(new BasicStroke(2f));
+                g2.drawRoundRect(1, 1, w - 3, h - 3, arc - 4, arc - 4);
+
                 g2.dispose();
             }
         };
         centerPanel.setOpaque(false);
-        centerPanel.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(255, 255, 255, 120), 2, true),
-                BorderFactory.createEmptyBorder(30, 40, 30, 40)
-        ));
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(20, 40, 10, 40));
         mainPanel.add(centerPanel, BorderLayout.CENTER);
 
-        GridBagConstraints gbc;
+        // ===== Top-left back button =====
+        JPanel topButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 0, 0));
+        topButtonsPanel.setOpaque(false);
 
-       
-        JLabel p1Label = new JLabel("Player 1 name:");
-        p1Label.setForeground(textPrimary);
-        p1Label.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        ImageIcon homeIcon = new ImageIcon(getClass().getResource("/resources/home.png"));
+        Image scaledHome = homeIcon.getImage().getScaledInstance(26, 26, Image.SCALE_SMOOTH);
+        homeIcon = new ImageIcon(scaledHome);
 
-        gbc = new GridBagConstraints();
-        gbc.insets = new Insets(12, 12, 12, 12);
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 0.4;
-        gbc.gridx = 0;
-        gbc.gridy = 0;
-        centerPanel.add(p1Label, gbc);
+        backButton = new RoundedButton("  Main Menu");
+        backButton.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        backButton.setBackground(accentGreen);
+        backButton.setForeground(Color.WHITE);
+        backButton.setPreferredSize(new Dimension(180, 45));
+        backButton.setIcon(homeIcon);
+        backButton.setHorizontalAlignment(SwingConstants.LEFT);
+        backButton.setIconTextGap(10);
 
-      
-        player1Field = new JTextField();
-        player1Field.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        player1Field.setBackground(new Color(224, 242, 241));
-        player1Field.setForeground(Color.DARK_GRAY);
-        resetFieldBorder(player1Field);
+        topButtonsPanel.add(backButton);
+        centerPanel.add(topButtonsPanel, BorderLayout.NORTH);
 
-        gbc = new GridBagConstraints();
-        gbc.insets = new Insets(12, 12, 12, 12);
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 0.6;
-        gbc.gridx = 1;
-        gbc.gridy = 0;
-        centerPanel.add(player1Field, gbc);
+        // ===== Center content (players + difficulty) =====
+        JPanel contentPanel = new JPanel();
+        contentPanel.setOpaque(false);
+        contentPanel.setLayout(new BoxLayout(contentPanel, BoxLayout.Y_AXIS));
+        centerPanel.add(contentPanel, BorderLayout.CENTER);
 
-       
-        JLabel p2Label = new JLabel("Player 2 name:");
-        p2Label.setForeground(textPrimary);
-        p2Label.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        // --- two cards for players ---
+        JPanel playersRow = new JPanel();
+        playersRow.setOpaque(false);
+        playersRow.setLayout(new BoxLayout(playersRow, BoxLayout.X_AXIS));
 
-        gbc = new GridBagConstraints();
-        gbc.insets = new Insets(12, 12, 12, 12);
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 0.4;
-        gbc.gridx = 0;
-        gbc.gridy = 1;
-        centerPanel.add(p2Label, gbc);
+        JPanel player1Card = createPlayerCard("Player 1", true);
+        JPanel player2Card = createPlayerCard("Player 2", false);
 
-       
-        player2Field = new JTextField();
-        player2Field.setFont(new Font("Segoe UI", Font.PLAIN, 18));
-        player2Field.setBackground(new Color(224, 242, 241));
-        player2Field.setForeground(Color.DARK_GRAY);
-        resetFieldBorder(player2Field);
+        playersRow.add(player1Card);
+        playersRow.add(Box.createHorizontalStrut(40));
+        playersRow.add(player2Card);
 
-        gbc = new GridBagConstraints();
-        gbc.insets = new Insets(12, 12, 12, 12);
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 0.6;
-        gbc.gridx = 1;
-        gbc.gridy = 1;
-        centerPanel.add(player2Field, gbc);
+        contentPanel.add(playersRow);
+        contentPanel.add(Box.createVerticalStrut(35));
 
-       
-        JLabel difficultyLabel = new JLabel("Choose difficulty level");
+        // --- difficulty label ---
+        JLabel difficultyLabel = new JLabel("Choose difficulty level:");
         difficultyLabel.setForeground(textPrimary);
-        difficultyLabel.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        difficultyLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        difficultyLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        gbc = new GridBagConstraints();
-        gbc.insets = new Insets(18, 12, 12, 12);
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 0.4;
-        gbc.gridx = 0;
-        gbc.gridy = 2;
-        centerPanel.add(difficultyLabel, gbc);
+        contentPanel.add(difficultyLabel);
+        contentPanel.add(Box.createVerticalStrut(12));
 
-       
+        // --- difficulty cards row ---
         JPanel difficultyCardsPanel = new JPanel();
         difficultyCardsPanel.setOpaque(false);
-        difficultyCardsPanel.setLayout(new GridLayout(3, 1, 12, 12));
+        difficultyCardsPanel.setLayout(new BoxLayout(difficultyCardsPanel, BoxLayout.X_AXIS));
 
-        easyCard = createDifficultyCard("Easy", "9x9 grid", Difficulty.EASY);
-        mediumCard = createDifficultyCard("Medium", "13x13 grid", Difficulty.MEDIUM);
-        hardCard = createDifficultyCard("Hard", "16x16 grid", Difficulty.HARD);
+        easyCard   = createDifficultyCard("Easy", Difficulty.EASY);
+        mediumCard = createDifficultyCard("Medium", Difficulty.MEDIUM);
+        hardCard   = createDifficultyCard("Hard", Difficulty.HARD);
 
         difficultyCardsPanel.add(easyCard);
+        difficultyCardsPanel.add(Box.createHorizontalStrut(25));
         difficultyCardsPanel.add(mediumCard);
+        difficultyCardsPanel.add(Box.createHorizontalStrut(25));
         difficultyCardsPanel.add(hardCard);
 
-        gbc = new GridBagConstraints();
-        gbc.insets = new Insets(18, 12, 12, 12);
-        gbc.anchor = GridBagConstraints.WEST;
-        gbc.fill = GridBagConstraints.HORIZONTAL;
-        gbc.weightx = 0.6;
-        gbc.gridx = 1;
-        gbc.gridy = 2;
-        centerPanel.add(difficultyCardsPanel, gbc);
+        difficultyCardsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        contentPanel.add(difficultyCardsPanel);
 
-     
-        JPanel bottomPanel = new JPanel(new BorderLayout());
-        bottomPanel.setOpaque(false);
- 
-        JPanel leftButtonsPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 10));
-        leftButtonsPanel.setOpaque(false);
+        // ===== Bottom: Start Game button =====
+        JPanel buttonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
+        buttonsPanel.setOpaque(false);
 
-        backButton = new JButton("Main Menu");
-        backButton.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        backButton.setFocusPainted(false);
-        backButton.setBackground(new Color(52, 73, 94));
-        backButton.setForeground(Color.WHITE);
-        backButton.setPreferredSize(new Dimension(180, 40));
-        backButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(44, 62, 80), 1, true),
-                BorderFactory.createEmptyBorder(5, 15, 5, 15)
-        ));
-        leftButtonsPanel.add(backButton);
-
-       
-        JPanel rightButtonsPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 15, 10));
-        rightButtonsPanel.setOpaque(false);
-
-        exitButton = new JButton("Exit");
-        exitButton.setFont(new Font("Segoe UI", Font.PLAIN, 16));
-        exitButton.setFocusPainted(false);
-        exitButton.setBackground(new Color(189, 57, 60));
-        exitButton.setForeground(Color.WHITE);
-        exitButton.setPreferredSize(new Dimension(120, 40));
-        exitButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(244, 143, 177), 1, true),
-                BorderFactory.createEmptyBorder(5, 15, 5, 15)
-        ));
-
-        startButton = new JButton("Start Game");
+        startButton = new RoundedButton("Start Game");
         startButton.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        startButton.setFocusPainted(false);
         startButton.setBackground(accentGreen);
         startButton.setForeground(Color.WHITE);
-        startButton.setPreferredSize(new Dimension(180, 45));
-        startButton.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(new Color(39, 174, 96), 1, true),
-                BorderFactory.createEmptyBorder(5, 20, 5, 20)
-        ));
+        startButton.setPreferredSize(new Dimension(160, 50));
 
-        rightButtonsPanel.add(exitButton);
-        rightButtonsPanel.add(startButton);
-
-        bottomPanel.add(leftButtonsPanel, BorderLayout.WEST);
-        bottomPanel.add(rightButtonsPanel, BorderLayout.EAST);
-
-        mainPanel.add(bottomPanel, BorderLayout.SOUTH);
+        buttonsPanel.add(startButton);
+        centerPanel.add(buttonsPanel, BorderLayout.SOUTH);
 
         attachListeners();
-        updateDifficultySelectionUI(); 
+        updateDifficultySelectionUI();
 
+        getRootPane().setDefaultButton(startButton);
         setLocationRelativeTo(null);
     }
 
-    // Restores normal border style
-    private void resetFieldBorder(JTextField field) {
-        field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(accentBorder, 1, true),
-                BorderFactory.createEmptyBorder(5, 8, 5, 8)
-        ));
-    }
+    // ===== Player card =====
+    private JPanel createPlayerCard(String title, boolean isPlayer1) {
 
-    // Applies red border for missing input
-    private void markFieldAsError(JTextField field) {
-        field.setBorder(BorderFactory.createCompoundBorder(
-                BorderFactory.createLineBorder(Color.RED, 2, true),
-                BorderFactory.createEmptyBorder(5, 8, 5, 8)
-        ));
-    }
+        JPanel card = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                super.paintComponent(g);
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
 
-    // Builds hearts string according to difficulty lives
-    private String buildHeartsForDifficulty(Difficulty difficulty) {
-        int lives = difficulty.getLives(); // assumes Difficulty has getLives()
-        StringBuilder sb = new StringBuilder();
-        for (int i = 0; i < lives; i++) {
-            sb.append("\u2764 "); // red heart Unicode
-        }
-        return sb.toString();
-    }
+                int arc = 25;
+                int w = getWidth();
+                int h = getHeight();
 
-    // Creates a single difficulty card
-    private JPanel createDifficultyCard(String title, String subtitle, Difficulty difficulty) {
-        JPanel card = new JPanel(new BorderLayout());
-        card.setBackground(cardBgNormal);
-        card.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 235), 2, true));
-        card.setPreferredSize(new Dimension(260, 70));
-        card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+                g2.setColor(new Color(0, 0, 0, 40));
+                g2.fillRoundRect(4, 6, w - 2, h - 2, arc, arc);
 
-        // Left text area
-        JPanel textPanel = new JPanel();
-        textPanel.setOpaque(false);
-        textPanel.setLayout(new BoxLayout(textPanel, BoxLayout.Y_AXIS));
-        textPanel.setBorder(BorderFactory.createEmptyBorder(8, 16, 8, 8));
+                GradientPaint gp = new GradientPaint(
+                        0, 0, new Color(255, 255, 255, 110),
+                        0, h, new Color(255, 255, 255, 40)
+                );
+                g2.setPaint(gp);
+                g2.fillRoundRect(0, 0, w - 4, h - 6, arc, arc);
+
+                g2.setColor(new Color(255, 255, 255, 160));
+                g2.setStroke(new BasicStroke(1.8f));
+                g2.drawRoundRect(2, 2, w - 8, h - 10, arc - 4, arc - 4);
+
+                g2.dispose();
+            }
+        };
+
+        card.setOpaque(false);
+        card.setPreferredSize(new Dimension(360, 200));
+        card.setMaximumSize(new Dimension(360, 200));
+
+        JPanel inner = new JPanel();
+        inner.setOpaque(false);
+        inner.setLayout(new BoxLayout(inner, BoxLayout.Y_AXIS));
+        inner.setBorder(BorderFactory.createEmptyBorder(18, 20, 18, 20));
 
         JLabel titleLabel = new JLabel(title);
-        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 18));
-        titleLabel.setForeground(cardTextMain);
+        titleLabel.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        titleLabel.setForeground(new Color(40, 40, 40));
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        titleLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel subtitleLabel = new JLabel(subtitle);
-        subtitleLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
-        subtitleLabel.setForeground(cardTextSub);
+        JLabel hintLabel = new JLabel("Enter your name");
+        hintLabel.setFont(new Font("Segoe UI", Font.PLAIN, 13));
+        hintLabel.setForeground(new Color(90, 90, 90));
+        hintLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        hintLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
 
-        JLabel heartsLabel = new JLabel(buildHeartsForDifficulty(difficulty));
-        heartsLabel.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 16));
-        heartsLabel.setForeground(heartsRed);
+        JPanel titlePanel = new JPanel();
+        titlePanel.setOpaque(false);
+        titlePanel.setLayout(new BoxLayout(titlePanel, BoxLayout.Y_AXIS));
+        titlePanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+        titlePanel.add(titleLabel);
+        titlePanel.add(Box.createVerticalStrut(4));
+        titlePanel.add(hintLabel);
 
-     // Create a horizontal panel for title + hearts
-        JPanel titleRow = new JPanel(new FlowLayout(FlowLayout.LEFT, 8, 0));
-        titleRow.setOpaque(false);
+        RoundedTextField nameField = new RoundedTextField(20);
+        nameField.setFont(new Font("Segoe UI", Font.PLAIN, 18));
+        nameField.setBackground(cardBgLight);
+        nameField.setForeground(Color.DARK_GRAY);
+        nameField.setPreferredSize(new Dimension(280, 36));
+        nameField.setMaximumSize(new Dimension(280, 36));
+        nameField.setAlignmentX(Component.CENTER_ALIGNMENT);
+        resetFieldBorder(nameField);
+        installFocusGlow(nameField);
 
-        titleRow.add(titleLabel);
-        titleRow.add(heartsLabel);
-
-        textPanel.add(titleRow);
-        textPanel.add(subtitleLabel);
-
-        // Check mark on the right
-        JLabel checkLabel = new JLabel("✓", SwingConstants.CENTER);
-        checkLabel.setFont(new Font("Segoe UI Emoji", Font.BOLD, 22));
-        checkLabel.setForeground(Color.WHITE);
-        checkLabel.setBorder(BorderFactory.createEmptyBorder(0, 0, 0, 18));
-        checkLabel.setVisible(false);
-
-        card.add(textPanel, BorderLayout.CENTER);
-        card.add(checkLabel, BorderLayout.EAST);
-
-        // Store references for later style updates
-        switch (difficulty) {
-            case EASY -> {
-                easyTitleLabel = titleLabel;
-                easySubtitleLabel = subtitleLabel;
-                easyHeartsLabel = heartsLabel;
-                easyCheckLabel = checkLabel;
-            }
-            case MEDIUM -> {
-                mediumTitleLabel = titleLabel;
-                mediumSubtitleLabel = subtitleLabel;
-                mediumHeartsLabel = heartsLabel;
-                mediumCheckLabel = checkLabel;
-            }
-            case HARD -> {
-                hardTitleLabel = titleLabel;
-                hardSubtitleLabel = subtitleLabel;
-                hardHeartsLabel = heartsLabel;
-                hardCheckLabel = checkLabel;
-            }
+        if (isPlayer1) {
+            player1Field = nameField;
+        } else {
+            player2Field = nameField;
         }
 
-        // Mouse click listener to select difficulty
+        JLabel colorLabel = new JLabel("Choose Board color:");
+        colorLabel.setFont(new Font("Segoe UI", Font.BOLD, 14));
+        colorLabel.setForeground(new Color(60, 60, 60));
+        colorLabel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JPanel colorsPanel = createColorButtonsPanel(isPlayer1);
+        colorsPanel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        inner.add(titlePanel);
+        inner.add(Box.createVerticalStrut(10));
+        inner.add(nameField);
+        inner.add(Box.createVerticalStrut(12));
+        inner.add(colorLabel);
+        inner.add(Box.createVerticalStrut(6));
+        inner.add(colorsPanel);
+
+        card.add(inner, BorderLayout.CENTER);
+        return card;
+    }
+
+    private JPanel createColorButtonsPanel(boolean isPlayer1) {
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.CENTER, 8, 0));
+        panel.setOpaque(false);
+        panel.setAlignmentX(Component.CENTER_ALIGNMENT);
+
+        JButton[] buttons = new JButton[BOARD_COLORS.length];
+        int defaultIndex = isPlayer1 ? p1ColorIndex : p2ColorIndex;
+
+        for (int i = 0; i < BOARD_COLORS.length; i++) {
+            JButton b = new JButton();
+            b.setPreferredSize(new Dimension(26, 26));
+            b.setBackground(BOARD_COLORS[i]);
+            b.setFocusPainted(false);
+            b.setContentAreaFilled(true);
+            b.setOpaque(true);
+            b.setBorder(BorderFactory.createLineBorder(Color.WHITE, 1, true));
+            b.setToolTipText(BOARD_COLOR_NAMES[i]);
+
+            final int index = i;
+            b.addActionListener(e -> {
+                if (isPlayer1) {
+                    if (index == p2ColorIndex) {
+                        JOptionPane.showMessageDialog(
+                                PlayerSetupView.this,
+                                "Player 2 already uses this color.\nPlease choose a different one.",
+                                "Color already in use",
+                                JOptionPane.INFORMATION_MESSAGE
+                        );
+                        return;
+                    }
+                    p1ColorIndex = index;
+                    updateColorButtonSelection(p1ColorButtons, p1ColorIndex);
+                } else {
+                    if (index == p1ColorIndex) {
+                        JOptionPane.showMessageDialog(
+                                PlayerSetupView.this,
+                                "Player 1 already uses this color.\nPlease choose a different one.",
+                                "Color already in use",
+                                JOptionPane.INFORMATION_MESSAGE
+                        );
+                        return;
+                    }
+                    p2ColorIndex = index;
+                    updateColorButtonSelection(p2ColorButtons, p2ColorIndex);
+                }
+            });
+
+            buttons[i] = b;
+            panel.add(b);
+        }
+
+        if (isPlayer1) {
+            p1ColorButtons = buttons;
+            updateColorButtonSelection(p1ColorButtons, defaultIndex);
+        } else {
+            p2ColorButtons = buttons;
+            updateColorButtonSelection(p2ColorButtons, defaultIndex);
+        }
+
+        return panel;
+    }
+
+    private void updateColorButtonSelection(JButton[] buttons, int selectedIndex) {
+        if (buttons == null) return;
+        for (int i = 0; i < buttons.length; i++) {
+            if (buttons[i] == null) continue;
+            buttons[i].setBorder(BorderFactory.createLineBorder(
+                    Color.WHITE,
+                    (i == selectedIndex) ? 3 : 1,
+                    true
+            ));
+        }
+    }
+
+    private void resetFieldBorder(JTextField field) {
+        field.setBorder(BorderFactory.createCompoundBorder(
+                new javax.swing.border.LineBorder(accentBorder, 1, true),
+                BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+    }
+
+    private void markFieldAsError(JTextField field) {
+        field.setBorder(BorderFactory.createCompoundBorder(
+                new javax.swing.border.LineBorder(Color.RED, 2, true),
+                BorderFactory.createEmptyBorder(5, 8, 5, 8)
+        ));
+    }
+
+    private void installFocusGlow(JTextField field) {
+        field.addFocusListener(new java.awt.event.FocusAdapter() {
+            @Override
+            public void focusGained(java.awt.event.FocusEvent e) {
+                field.setBorder(BorderFactory.createCompoundBorder(
+                        new javax.swing.border.LineBorder(accentBorder.brighter(), 2, true),
+                        BorderFactory.createEmptyBorder(5, 8, 5, 8)
+                ));
+            }
+
+            @Override
+            public void focusLost(java.awt.event.FocusEvent e) {
+                resetFieldBorder(field);
+            }
+        });
+    }
+
+    // ===== Difficulty cards =====
+    private JPanel createDifficultyCard(String title, Difficulty difficulty) {
+
+        JPanel card = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+                int arc = 20;
+                int w = getWidth();
+                int h = getHeight();
+
+                g2.setColor(new Color(0, 0, 0, 40));
+                g2.fillRoundRect(4, 6, w - 2, h - 2, arc, arc);
+
+                g2.setColor(getBackground());
+                g2.fillRoundRect(0, 0, w - 4, h - 6, arc, arc);
+
+                g2.setColor(getForeground());
+                g2.setStroke(new BasicStroke(2f));
+                g2.drawRoundRect(2, 2, w - 8, h - 10, arc - 4, arc - 4);
+
+                g2.dispose();
+            }
+        };
+
+        card.setOpaque(false);
+        card.setPreferredSize(new Dimension(220, 105));
+        card.setMaximumSize(new Dimension(220, 105));
+        card.setMinimumSize(new Dimension(220, 105));
+        card.setBackground(cardBgDark);
+        card.setForeground(new Color(40, 44, 80));
+        card.setCursor(Cursor.getPredefinedCursor(Cursor.HAND_CURSOR));
+
+        JPanel textPanel = new JPanel(new FlowLayout(FlowLayout.CENTER, 5, 35));
+        textPanel.setOpaque(false);
+
+        String gridText = switch (difficulty) {
+            case EASY -> "9×9";
+            case MEDIUM -> "13×13";
+            case HARD -> "16×16";
+        };
+
+        JLabel label = new JLabel(title + "   " + gridText);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 22));
+        label.setForeground(new Color(220, 220, 220));
+
+        textPanel.add(label);
+        card.add(textPanel, BorderLayout.CENTER);
+
+        switch (difficulty) {
+            case EASY -> easyLabel = label;
+            case MEDIUM -> mediumLabel = label;
+            case HARD -> hardLabel = label;
+        }
+
         card.addMouseListener(new MouseAdapter() {
             @Override
             public void mouseClicked(MouseEvent e) {
@@ -389,14 +494,16 @@ public class PlayerSetupView extends JFrame {
             @Override
             public void mouseEntered(MouseEvent e) {
                 if (difficulty != selectedDifficulty) {
-                    card.setBackground(new Color(245, 245, 250));
+                    card.setBackground(cardBgDark.brighter());
+                    card.repaint();
                 }
             }
 
             @Override
             public void mouseExited(MouseEvent e) {
                 if (difficulty != selectedDifficulty) {
-                    card.setBackground(cardBgNormal);
+                    card.setBackground(cardBgDark);
+                    card.repaint();
                 }
             }
         });
@@ -404,44 +511,30 @@ public class PlayerSetupView extends JFrame {
         return card;
     }
 
-    // Update cards UI according to selectedDifficulty
     private void updateDifficultySelectionUI() {
-        styleCard(easyCard, easyTitleLabel, easySubtitleLabel, easyHeartsLabel, easyCheckLabel,
-                selectedDifficulty == Difficulty.EASY);
-        styleCard(mediumCard, mediumTitleLabel, mediumSubtitleLabel, mediumHeartsLabel, mediumCheckLabel,
-                selectedDifficulty == Difficulty.MEDIUM);
-        styleCard(hardCard, hardTitleLabel, hardSubtitleLabel, hardHeartsLabel, hardCheckLabel,
-                selectedDifficulty == Difficulty.HARD);
+        styleCard(easyCard, easyLabel, selectedDifficulty == Difficulty.EASY);
+        styleCard(mediumCard, mediumLabel, selectedDifficulty == Difficulty.MEDIUM);
+        styleCard(hardCard, hardLabel, selectedDifficulty == Difficulty.HARD);
     }
 
-    private void styleCard(JPanel card,
-                           JLabel titleLabel,
-                           JLabel subtitleLabel,
-                           JLabel heartsLabel,
-                           JLabel checkLabel,
-                           boolean selected) {
+    private void styleCard(JPanel card, JLabel label, boolean selected) {
         if (card == null) return;
 
         if (selected) {
-            card.setBackground(accentGreen);
-            card.setBorder(BorderFactory.createLineBorder(new Color(27, 163, 84), 3, true));
-            if (titleLabel != null) titleLabel.setForeground(Color.WHITE);
-            if (subtitleLabel != null) subtitleLabel.setForeground(new Color(230, 255, 240));
-            if (heartsLabel != null) heartsLabel.setForeground(new Color(255, 240, 240));
-            if (checkLabel != null) checkLabel.setVisible(true);
+            card.setBackground(cardBgDark.brighter());
+            card.setForeground(new Color(255, 223, 128));
+            if (label != null) label.setForeground(new Color(255, 246, 210));
         } else {
-            card.setBackground(cardBgNormal);
-            card.setBorder(BorderFactory.createLineBorder(new Color(230, 230, 235), 2, true));
-            if (titleLabel != null) titleLabel.setForeground(cardTextMain);
-            if (subtitleLabel != null) subtitleLabel.setForeground(cardTextSub);
-            if (heartsLabel != null) heartsLabel.setForeground(heartsRed);
-            if (checkLabel != null) checkLabel.setVisible(false);
+            card.setBackground(cardBgDark);
+            card.setForeground(new Color(40, 44, 80));
+            if (label != null) label.setForeground(new Color(220, 220, 220));
         }
+        card.repaint();
     }
 
+    // ===== Listeners / logic =====
     private void attachListeners() {
         startButton.addActionListener(e -> onStartGame());
-        exitButton.addActionListener(e -> System.exit(0));
         backButton.addActionListener(e -> onBackToMainMenu());
     }
 
@@ -449,7 +542,6 @@ public class PlayerSetupView extends JFrame {
         String p1Name = player1Field.getText().trim();
         String p2Name = player2Field.getText().trim();
 
-        // Reset borders before validation
         resetFieldBorder(player1Field);
         resetFieldBorder(player2Field);
 
@@ -459,7 +551,6 @@ public class PlayerSetupView extends JFrame {
             markFieldAsError(player1Field);
             valid = false;
         }
-
         if (p2Name.isEmpty()) {
             markFieldAsError(player2Field);
             valid = false;
@@ -491,6 +582,10 @@ public class PlayerSetupView extends JFrame {
             return;
         }
 
+        // Save chosen board colors so MineSweeper can use them
+        player1BoardColorChoice = BOARD_COLORS[p1ColorIndex];
+        player2BoardColorChoice = BOARD_COLORS[p2ColorIndex];
+
         new Game(difficulty, p1Name, p2Name);
         dispose();
     }
@@ -503,6 +598,97 @@ public class PlayerSetupView extends JFrame {
 
     private Difficulty getSelectedDifficulty() {
         return selectedDifficulty;
+    }
+
+    // ===== Rounded button with hover glow =====
+    private static class RoundedButton extends JButton {
+        private static final long serialVersionUID = 1L;
+
+        private Color hoverColor;
+        private boolean hovered = false;
+
+        public RoundedButton(String text) {
+            super(text);
+            setContentAreaFilled(false);
+            setOpaque(false);
+            setBorder(BorderFactory.createEmptyBorder(10, 20, 10, 20));
+            setFocusPainted(false);
+
+            addMouseListener(new MouseAdapter() {
+                @Override
+                public void mouseEntered(MouseEvent e) {
+                    hovered = true;
+                    repaint();
+                }
+
+                @Override
+                public void mouseExited(MouseEvent e) {
+                    hovered = false;
+                    repaint();
+                }
+            });
+        }
+
+        @Override
+        public void setBackground(Color bg) {
+            super.setBackground(bg);
+            if (bg != null) {
+                hoverColor = bg.brighter();
+            }
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            int arc = 30;
+            Color bg = hovered && hoverColor != null ? hoverColor : getBackground();
+
+            g2.setColor(bg);
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
+
+            if (hovered) {
+                g2.setColor(new Color(255, 255, 255, 80));
+                g2.setStroke(new BasicStroke(2f));
+                g2.drawRoundRect(1, 1, getWidth() - 3, getHeight() - 3, arc - 4, arc - 4);
+            }
+
+            g2.dispose();
+            super.paintComponent(g);
+        }
+    }
+
+    // ===== Rounded text field =====
+    private static class RoundedTextField extends JTextField {
+        private static final long serialVersionUID = 1L;
+
+        public RoundedTextField(int columns) {
+            super(columns);
+            setOpaque(false);
+        }
+
+        @Override
+        protected void paintComponent(Graphics g) {
+            Graphics2D g2 = (Graphics2D) g.create();
+            g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+            int arc = 20;
+            g2.setColor(getBackground());
+            g2.fillRoundRect(0, 0, getWidth(), getHeight(), arc, arc);
+
+            g2.dispose();
+            super.paintComponent(g);
+        }
+    }
+
+    // Optional getters if you want to read colors from outside
+    public static Color getPlayer1BoardColorChoice() {
+        return player1BoardColorChoice;
+    }
+
+    public static Color getPlayer2BoardColorChoice() {
+        return player2BoardColorChoice;
     }
 
     public static void main(String[] args) {
