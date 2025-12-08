@@ -26,7 +26,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 	private Board boardA;
 	private Board boardB;
-
+    private boolean flagMode = false;
 	private Player player1;
 	private Player player2;
 	private Player currentPlayer;
@@ -119,6 +119,21 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		boardB = new Board(currentDifficulty);
 		gui.setMines(currentDifficulty.getMines());
 	}
+	 public void setFlagMode(boolean flagMode) {
+	        boolean wasFlagMode = this.flagMode;
+	        this.flagMode = flagMode;
+
+	        // When leaving flag mode → evaluate all flags once
+	        if (wasFlagMode && !flagMode) {
+	            evaluateFlags();      // scores + borders
+	            updateMineCounters(); // now remaining mines changes
+	            checkGame();          // now we can also check win condition
+	        }
+	    }
+
+	    public boolean isFlagMode() {
+	        return flagMode;
+	    }
 
 	public void newGame() { //Resets the game state (players, boards, lives, score, questions, timer) and restarts the GUI for a new match.
 		this.playing = false;
