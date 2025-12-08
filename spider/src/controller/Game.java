@@ -255,22 +255,31 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	}
 
 	
-	private boolean checkWinCondition(Board board) { //Returns true if all non-mine, non-special cells are revealed
-		Cell[][] cells = board.getCells();
+	 private boolean checkWinCondition(Board board) {
+	        Cell[][] cells = board.getCells();
 
-		for (int x = 0; x < board.getCols(); x++) {
-			for (int y = 0; y < board.getRows(); y++) {
-				String content = cells[x][y].getContent();
-				boolean isMine = cells[x][y].getMine();
-				SpecialBoxType specialBox = cells[x][y].getSpecialBox();
+	        for (int x = 0; x < board.getCols(); x++) {
+	            for (int y = 0; y < board.getRows(); y++) {
+	                Cell cell = cells[x][y];
+	                String content = cell.getContent();
+	                boolean isMine = cell.getMine();
 
-				if (!isMine && specialBox == SpecialBoxType.NONE && content.equals("")) {
-					return false;
-				}
-			}
-		}
-		return true;
-	}
+	                if (content == null) {
+	                    content = "";
+	                }
+
+	               
+	                if (isMine) {
+	                    if (!"F".equals(content) && !"M".equals(content)) {
+	                        return false; 
+	                    }
+	                }
+	            }
+	        }
+
+	   
+	        return true;
+	    }
 	
 	private void findZeroes(int x, int y, Board board, JButton[][] buttons) {
 
