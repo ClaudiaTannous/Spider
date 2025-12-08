@@ -983,6 +983,25 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 			gameLost();
 		}
 	}
+	 private void clampLives() {
+	        int max = getMaxLives();
+
+	        if (sharedLives > max) {
+	            int extraLives = sharedLives - max;
+
+	            int activationCost = getActivationCost();
+
+	            int bonusPoints = extraLives * activationCost;
+
+	            sharedScore += bonusPoints;  
+	            sharedLives = max;           
+
+	        }
+
+	        if (sharedLives < 0) {
+	            sharedLives = 0;
+	        }
+	    }
 
 	@Override
 	public void mousePressed(MouseEvent e) {
