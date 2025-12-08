@@ -658,6 +658,17 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	
 	}
 	
+	private void evaluateFlags() {
+	    if (boardA != null && gui != null) {
+	        evaluateFlagsOnBoard(boardA, gui.getButtonsA());
+	    }
+	    if (boardB != null && gui != null) {
+	        evaluateFlagsOnBoard(boardB, gui.getButtonsB());
+	    }
+
+	    gui.updateStatus(sharedScore, sharedLives);
+	}
+	
 	public void mouseClicked(MouseEvent e) {
 
         if (!playing) {
