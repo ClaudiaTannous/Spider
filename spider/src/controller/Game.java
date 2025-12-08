@@ -16,6 +16,7 @@ import model.Board;
 import model.Cell;
 import model.Difficulty;
 import model.Player;
+import model.Question;
 import model.Score;
 import model.SpecialBoxType;
 import view.MineSweeper;
@@ -484,44 +485,81 @@ public class Game implements MouseListener, ActionListener, WindowListener {
         }
     }
 
-	private void handleQuestionBox(int x, int y, Board board, JButton button) { //Shows a quiz question and applies feedback for correct/incorrect answers.
+	 private void handleQuestionBox(int x, int y, Board board, JButton button) {
+	        Cell cell = board.getCells()[x][y];
+	        String content = cell.getContent();
 
+	        if (content.equals("")) {
+	            // Reveal question
+	            button.setBackground(Color.YELLOW);
+	            button.setIcon(null);
+	            button.setText("❓");
+	            button.setFont(new Font("Serif", Font.BOLD, 18));
+	            button.setForeground(Color.RED);
 
-		var opt = sysData.nextQuestion();
-		if (opt.isEmpty()) {
-			
-			gui.showNoMoreQuestionsDialog();
-			return;
-		}
+	            cell.setContent("❓");
 
-		model.Question q = opt.get();
+	            sharedScore += 1;
+	            gui.updateStatus(sharedScore, sharedLives);
 
-		
-		Object answer = gui.askQuestion(q);
-		if (answer == null) {
-			
-			return;
-		}
+	            // 🔥 NEW: expand empty neighbors like normal empty cell
+	            findZeroes(x, y, board, (board == boardA ? gui.getButtonsA() : gui.getButtonsB()));
 
-		int selectedIndex = q.getOptions().indexOf(answer.toString());
-		boolean correct = (selectedIndex == q.getCorrectIndex());
+	            return;
+	        }
 
-		if (correct) {
-			button.setBackground(Color.green);
-			gui.showCorrectAnswerDialog();
-		} else {
-			button.setBackground(Color.red);
-			gui.showWrongAnswerDialog();
-		}
+	        if (content.equals("USED")) {
+	            return;
+	        }
 
-		button.setIcon(null);
-		button.setText("Q");
-		button.setFont(new Font("Serif", Font.BOLD, 18));
-		button.setForeground(Color.RED);
+	        // SECOND CLICK – answer question
+	        if (content.equals("❓")) {
+	            int choice = JOptionPane.showConfirmDialog(
+	                    gui,
+	                    "Do you want to answer the question now?\n" +
+	                    "(Activation will cost " + getActivationCost() + " points.)",
+	                    "Answer Question?",
+	                    JOptionPane.YES_NO_OPTION
+	            );
 
-		board.getCells()[x][y].setContent("Q");
-	}
+	            if (choice != JOptionPane.YES_OPTION) {
+	                return;
+	            }
 
+	            var opt = sysData.nextQuestion();
+	            if (opt.isEmpty()) {
+	                gui.showNoMoreQuestionsDialog();
+	                return;
+	            }
+
+	            Question q = opt.get();
+
+	            Object answer = gui.askQuestion(q);
+	       
+
+	            int selectedIndex = q.getOptions().indexOf(answer.toString());
+	            boolean correct = (selectedIndex == q.getCorrectIndex());
+
+	            if (correct) {
+	                button.setBackground(Color.GREEN);
+	                gui.showCorrectAnswerDialog();
+	            } else {
+	                button.setBackground(Color.RED);
+	                gui.showWrongAnswerDialog();
+	            }
+
+	            button.setIcon(null);
+	            button.setText("USED");
+	            button.setFont(new Font("Serif", Font.BOLD, 16));
+	            button.setForeground(Color.LIGHT_GRAY);
+
+	            cell.setContent("USED");
+	            cell.setSpecialBox(SpecialBoxType.NONE);
+
+	            // טבלת הניקוד (כולל עלות ההפעלה החדשה)
+	            applyQuestionOutcome(currentDifficulty, q.getDifficulty(), correct, board);
+	        }
+	    }
 	private void handleMineClick(int x, int y, Board board, JButton button) { // Reduces a life, shows mine explosion, updates status, and may end the game.
 
 		Cell cell = board.getCells()[x][y];
