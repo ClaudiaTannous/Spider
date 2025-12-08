@@ -669,6 +669,47 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	    gui.updateStatus(sharedScore, sharedLives);
 	}
 	
+ 
+	private void evaluateFlagsOnBoard(Board board, JButton[][] buttons) {
+	    Cell[][] cells = board.getCells();
+
+	    for (int x = 0; x < board.getCols(); x++) {
+	        for (int y = 0; y < board.getRows(); y++) {
+	            Cell cell = cells[x][y];
+	            JButton button = buttons[x][y];
+
+	            // רק משבצות שעדיין מסומנות בדגל
+	            if (!"F".equals(cell.getContent())) {
+	                continue;
+	            }
+
+	            // אם כבר הערכנו את הדגל הזה (יש LineBorder) – לא מחשבים שוב
+	            if (button.getBorder() instanceof LineBorder) {
+	                continue;
+	            }
+
+	            if (cell.getMine()) {
+	                // ❇ דגל נכון על מוקש:
+	                // +1 נקודה וחושפים את המוקש
+	                sharedScore += 1;
+
+	                cell.setContent("M");                  // עכשיו זה מוקש גלוי
+	                button.setIcon(gui.getIconMine());     // אייקון המוקש הרגיל
+	                button.setText("");                    // לא צריך "F" יותר
+	                button.setBackground(Color.DARK_GRAY); // או כל צבע שאתה אוהב
+	                button.setBorder(new LineBorder(Color.GREEN, 2, true));
+	            } else {
+	                // ❌ דגל שגוי (על ריקה / מספר / הפתעה / שאלה): -3 נק'
+	                sharedScore -= 3;
+	                button.setBorder(new LineBorder(Color.RED, 2, true));
+	                // כאן במפורש *לא* חושפים את המשבצת – רק מסמנים שהדגל היה שגוי
+	                // (החוקים שלך לא דורשים לחשוף במקרה הזה)
+	            }
+	        }
+	    }
+	}
+	
+	
 	public void mouseClicked(MouseEvent e) {
 
         if (!playing) {
