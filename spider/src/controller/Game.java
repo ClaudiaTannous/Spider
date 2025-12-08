@@ -28,7 +28,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 	private Board boardA;
 	private Board boardB;
-    private boolean flagMode = false;
+	private boolean flagMode = false;
 	private Player player1;
 	private Player player2;
 	private Player currentPlayer;
@@ -43,9 +43,11 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 	private Difficulty currentDifficulty;
 	private final Random rng = new Random();
-	
-	
-	public Game(Difficulty difficulty, String player1Name, String player2Name) {// Sets up a new game: loads scores and questions, creates players and boards, initializes the GUI and game state.
+
+	public Game(Difficulty difficulty, String player1Name, String player2Name) {// Sets up a new game: loads scores and
+																				// questions, creates players and
+																				// boards, initializes the GUI and game
+																				// state.
 		score = new Score();
 		score.populate();
 
@@ -72,32 +74,35 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		gui.hideAll();
 
 	}
-	
-	 private int getActivationCost(Difficulty diff) {
-	        return switch (diff) {
-	            case EASY   -> 5;
-	            case MEDIUM -> 8;
-	            case HARD   -> 12;
-	        };
-	    }
 
-	    private int getActivationCost() {
-	        return getActivationCost(currentDifficulty);
-	    }
-	    // points used by surprise good/bad effect (±8 / ±12 / ±16)
-	    private int getSurprisePoints(Difficulty diff) {
-	        return switch (diff) {
-	            case EASY   -> 8;
-	            case MEDIUM -> 12;
-	            case HARD   -> 16;
-	        };
-	    }
+	private int getActivationCost(Difficulty diff) {
+		return switch (diff) {
+		case EASY -> 5;
+		case MEDIUM -> 8;
+		case HARD -> 12;
+		};
+	}
 
-	    private int getSurprisePoints() {
-	        return getSurprisePoints(currentDifficulty);
-	    }
+	private int getActivationCost() {
+		return getActivationCost(currentDifficulty);
+	}
 
-	private void initializePlayers(String name1, String name2) {  //Ensures valid player names, creates the Player objects, initializes shared lives/score, and constructs the MineSweeper GUI.
+	// points used by surprise good/bad effect (±8 / ±12 / ±16)
+	private int getSurprisePoints(Difficulty diff) {
+		return switch (diff) {
+		case EASY -> 8;
+		case MEDIUM -> 12;
+		case HARD -> 16;
+		};
+	}
+
+	private int getSurprisePoints() {
+		return getSurprisePoints(currentDifficulty);
+	}
+
+	private void initializePlayers(String name1, String name2) { // Ensures valid player names, creates the Player
+																	// objects, initializes shared lives/score, and
+																	// constructs the MineSweeper GUI.
 		if (name1 == null || name1.trim().isEmpty())
 			name1 = "Player A";
 		if (name2 == null || name2.trim().isEmpty())
@@ -110,67 +115,71 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		sharedLives = currentDifficulty.getLives();
 		sharedScore = 0;
 
-		this.gui = new MineSweeper(this,currentDifficulty.getRows(), currentDifficulty.getCols(),
+		this.gui = new MineSweeper(this, currentDifficulty.getRows(), currentDifficulty.getCols(),
 				currentDifficulty.getMines(), player1.getName(), player2.getName());
 		this.gui.setButtonListeners(this);
 		this.gui.initStatus(sharedLives);
 		this.gui.setDifficulty(currentDifficulty);
 	}
-	public void createBoards() {//Creates a fresh Board for each player based on the current difficulty and updates the GUI mine count.
+
+	public void createBoards() {// Creates a fresh Board for each player based on the current difficulty and
+								// updates the GUI mine count.
 		boardA = new Board(currentDifficulty);
 		boardB = new Board(currentDifficulty);
 		gui.setMines(currentDifficulty.getMines());
 	}
-	 public void setFlagMode(boolean flagMode) {
-	        boolean wasFlagMode = this.flagMode;
-	        this.flagMode = flagMode;
 
-	        // When leaving flag mode → evaluate all flags once
-	        if (wasFlagMode && !flagMode) {
-	            evaluateFlags();      // scores + borders
-	            updateMineCounters(); // now remaining mines changes
-	            checkGame();          // now we can also check win condition
-	        }
-	    }
+	public void setFlagMode(boolean flagMode) {
+		boolean wasFlagMode = this.flagMode;
+		this.flagMode = flagMode;
 
-	    public boolean isFlagMode() {
-	        return flagMode;
-	    }
-	    
-	    private void handleFlagClick(int x, int y, Board board, JButton button) {
-	        Cell cell = board.getCells()[x][y];
-	        String content = cell.getContent();
-	        if (content == null) content = "";
+		// When leaving flag mode → evaluate all flags once
+		if (wasFlagMode && !flagMode) {
+			evaluateFlags(); // scores + borders
+			updateMineCounters(); // now remaining mines changes
+			checkGame(); // now we can also check win condition
+		}
+	}
 
-	    
-	        if ("F".equals(content)) {
-	            cell.setContent("");
-	            button.setText("");
-	            button.setIcon(null);
-	            button.setBorder(UIManager.getBorder("Button.border")); 
-	            gui.updateStatus(sharedScore, sharedLives);
-	            return;
-	        }
+	public boolean isFlagMode() {
+		return flagMode;
+	}
 
-	        // If the cell is already revealed (number, M, USED, etc.) → do nothing
-	        if (!content.equals("")) {
-	            return;
-	        }
+	private void handleFlagClick(int x, int y, Board board, JButton button) {
+		Cell cell = board.getCells()[x][y];
+		String content = cell.getContent();
+		if (content == null)
+			content = "";
 
-	        // Place a NEW flag – but no hint if correct or not
-	        cell.setContent("F");
+		if ("F".equals(content)) {
+			cell.setContent("");
+			button.setText("");
+			button.setIcon(null);
+			button.setBorder(UIManager.getBorder("Button.border"));
+			gui.updateStatus(sharedScore, sharedLives);
+			return;
+		}
 
-	        button.setIcon(null);
-	        button.setText("🚩");
-	        button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
-	        button.setForeground(Color.RED);
-	        button.setBorder(UIManager.getBorder("Button.border")); // neutral border
+		// If the cell is already revealed (number, M, USED, etc.) → do nothing
+		if (!content.equals("")) {
+			return;
+		}
 
-	        // no score change here!
-	        gui.updateStatus(sharedScore, sharedLives);
-	    }
+		// Place a NEW flag – but no hint if correct or not
+		cell.setContent("F");
 
-	public void newGame() { //Resets the game state (players, boards, lives, score, questions, timer) and restarts the GUI for a new match.
+		button.setIcon(null);
+		button.setText("🚩");
+		button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
+		button.setForeground(Color.RED);
+		button.setBorder(UIManager.getBorder("Button.border")); // neutral border
+
+		// no score change here!
+		gui.updateStatus(sharedScore, sharedLives);
+	}
+
+	public void newGame() { // Resets the game state (players, boards, lives, score, questions, timer) and
+							// restarts the GUI for a new match.
 		this.playing = false;
 
 		if (sysData != null) {
@@ -195,178 +204,170 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		gui.initStatus(sharedLives);
 		gui.updateStatus(sharedScore, sharedLives);
 	}
-	
-	private void endGame() { //Marks the game as not playing, reveals all mines, and saves the score state.
+
+	private void endGame() { // Marks the game as not playing, reveals all mines, and saves the score state.
 		playing = false;
 		showAll();
 		score.save();
 	}
-    private void convertRemainingLivesToPoints() {
-        if (sharedLives <= 0) {
-            return;
-        }
 
-        int lifeValue = getActivationCost();     
-        int bonus = sharedLives * lifeValue;      
+	private void convertRemainingLivesToPoints() {
+		if (sharedLives <= 0) {
+			return;
+		}
 
-        sharedScore += bonus;
-        sharedLives = 0;                         
+		int lifeValue = getActivationCost();
+		int bonus = sharedLives * lifeValue;
 
-       
-        if (gui != null) {
-            gui.updateStatus(sharedScore, sharedLives);
-        }
-    }
+		sharedScore += bonus;
+		sharedLives = 0;
 
+		if (gui != null) {
+			gui.updateStatus(sharedScore, sharedLives);
+		}
+	}
 
-	 public void gameWon() {
-	        // קודם ממירים חיים לנקודות לפי הכלל החדש
-	        convertRemainingLivesToPoints();
+	public void gameWon() {
+		// קודם ממירים חיים לנקודות לפי הכלל החדש
+		convertRemainingLivesToPoints();
 
-	        score.incCurrentStreak();
-	        score.incCurrentWinningStreak();
-	        score.incGamesWon();
-	        score.incGamesPlayed();
+		score.incCurrentStreak();
+		score.incCurrentWinningStreak();
+		score.incGamesWon();
+		score.incGamesPlayed();
 
-	        gui.interruptTimer();
-	        endGame();
+		gui.interruptTimer();
+		endGame();
 
-	        sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "WIN",
-	                gui.getTimePassed());
+		sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "WIN",
+				gui.getTimePassed());
 
-	        gui.showVictoryDialog(sharedScore, gui.getTimePassed());
+		gui.showVictoryDialog(sharedScore, gui.getTimePassed());
 
-	        score.addTime(gui.getTimePassed(), new Date(System.currentTimeMillis()));
-	        score.save();
-	    }
+		score.addTime(gui.getTimePassed(), new Date(System.currentTimeMillis()));
+		score.save();
+	}
 
-	 public void gameLost() {
-	        // אם במקרה נשארו חיים (לא סביר אצלך, אבל לפי ההגדרה זה נכון)
-	        convertRemainingLivesToPoints();
+	public void gameLost() {
+		// אם במקרה נשארו חיים (לא סביר אצלך, אבל לפי ההגדרה זה נכון)
+		convertRemainingLivesToPoints();
 
-	        score.incCurrentLosingStreak();
-	        score.incGamesPlayed();
+		score.incCurrentLosingStreak();
+		score.incGamesPlayed();
 
-	        gui.interruptTimer();
-	        endGame();
+		gui.interruptTimer();
+		endGame();
 
-	        sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "LOST",
-	                gui.getTimePassed());
+		sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "LOST",
+				gui.getTimePassed());
 
-	        gui.showGameOverDialog(sharedScore);
+		gui.showGameOverDialog(sharedScore);
 
-	        score.save();
-	    }
+		score.save();
+	}
 
-	
+	private void checkGame() {
+		boolean aDone = checkWinCondition(boardA);
+		boolean bDone = checkWinCondition(boardB);
 
-	 private void checkGame() {
-	        boolean aDone = checkWinCondition(boardA);
-	        boolean bDone = checkWinCondition(boardB);
+		if (aDone || bDone || sharedLives <= 0) {
+			if (sharedLives > 0) {
+				gameWon();
+			} else {
+				gameLost();
+			}
+		}
+	}
 
-	        if (aDone || bDone || sharedLives <= 0) {
-	            if (sharedLives > 0) {
-	                gameWon();
-	            } else {
-	                gameLost();
-	            }
-	        }
-	    }
+	private boolean checkWinCondition(Board board) {
+		Cell[][] cells = board.getCells();
 
-	
-	 private boolean checkWinCondition(Board board) {
-	        Cell[][] cells = board.getCells();
+		for (int x = 0; x < board.getCols(); x++) {
+			for (int y = 0; y < board.getRows(); y++) {
+				Cell cell = cells[x][y];
+				String content = cell.getContent();
+				boolean isMine = cell.getMine();
 
-	        for (int x = 0; x < board.getCols(); x++) {
-	            for (int y = 0; y < board.getRows(); y++) {
-	                Cell cell = cells[x][y];
-	                String content = cell.getContent();
-	                boolean isMine = cell.getMine();
+				if (content == null) {
+					content = "";
+				}
 
-	                if (content == null) {
-	                    content = "";
-	                }
+				if (isMine) {
+					if (!"F".equals(content) && !"M".equals(content)) {
+						return false;
+					}
+				}
+			}
+		}
 
-	               
-	                if (isMine) {
-	                    if (!"F".equals(content) && !"M".equals(content)) {
-	                        return false; 
-	                    }
-	                }
-	            }
-	        }
+		return true;
+	}
 
-	   
-	        return true;
-	    }
-	
 	private void findZeroes(int x, int y, Board board, JButton[][] buttons) {
 
-        Cell[][] cells = board.getCells();
+		Cell[][] cells = board.getCells();
 
-        for (int tempX = board.makeValidCoordinateX(x - 1); tempX <= board.makeValidCoordinateX(x + 1); tempX++) {
+		for (int tempX = board.makeValidCoordinateX(x - 1); tempX <= board.makeValidCoordinateX(x + 1); tempX++) {
 
-            for (int tempY = board.makeValidCoordinateY(y - 1); tempY <= board.makeValidCoordinateY(y + 1); tempY++) {
+			for (int tempY = board.makeValidCoordinateY(y - 1); tempY <= board.makeValidCoordinateY(y + 1); tempY++) {
 
-                if (tempX == x && tempY == y)
-                    continue;
+				if (tempX == x && tempY == y)
+					continue;
 
-                Cell cell = cells[tempX][tempY];
-                JButton btn = buttons[tempX][tempY];
+				Cell cell = cells[tempX][tempY];
+				JButton btn = buttons[tempX][tempY];
 
-                String c = cell.getContent();
+				String c = cell.getContent();
 
-             
-                if (!c.equals("") && !c.equals("❓"))
-                 continue;
+				if (!c.equals("") && !c.equals("❓"))
+					continue;
 
-                if (cell.getMine())
-                    continue;
+				if (cell.getMine())
+					continue;
 
-                SpecialBoxType special = cell.getSpecialBox();
+				SpecialBoxType special = cell.getSpecialBox();
 
-                if (special == SpecialBoxType.SURPRISE) {
-                    cell.setContent("🎁");
-                    btn.setIcon(null);
-                    btn.setText("🎁");
-                    btn.setFont(new Font("Serif", Font.BOLD, 18));
-                    btn.setForeground(Color.RED);
-                    btn.setBackground(Color.ORANGE);
-                    continue;
-                }
+				if (special == SpecialBoxType.SURPRISE) {
+					cell.setContent("🎁");
+					btn.setIcon(null);
+					btn.setText("🎁");
+					btn.setFont(new Font("Serif", Font.BOLD, 18));
+					btn.setForeground(Color.RED);
+					btn.setBackground(Color.ORANGE);
+					continue;
+				}
 
-                if (special == SpecialBoxType.QUESTION) {
-                    cell.setContent("❓");
-                    btn.setIcon(null);
-                    btn.setText("❓");
-                    btn.setFont(new Font("Serif", Font.BOLD, 18));
-                    btn.setForeground(Color.RED);
-                    btn.setBackground(Color.YELLOW);
-                    continue;
-                }
+				if (special == SpecialBoxType.QUESTION) {
+					cell.setContent("❓");
+					btn.setIcon(null);
+					btn.setText("❓");
+					btn.setFont(new Font("Serif", Font.BOLD, 18));
+					btn.setForeground(Color.RED);
+					btn.setBackground(Color.YELLOW);
+					continue;
+				}
 
-                int neighbours = cell.getSurroundingMines();
-                cell.setContent(Integer.toString(neighbours));
+				int neighbours = cell.getSurroundingMines();
+				cell.setContent(Integer.toString(neighbours));
 
-                btn.setBackground(gui.CELL_REVEALED);
+				btn.setBackground(gui.CELL_REVEALED);
 
-                if (neighbours == 0) {
-                    btn.setText("·");
-                    btn.setForeground(new Color(160, 170, 200, 100));
-                    btn.setFont(new Font("Arial", Font.BOLD, 24));
+				if (neighbours == 0) {
+					btn.setText("·");
+					btn.setForeground(new Color(160, 170, 200, 100));
+					btn.setFont(new Font("Arial", Font.BOLD, 24));
 
-                    findZeroes(tempX, tempY, board, buttons);
+					findZeroes(tempX, tempY, board, buttons);
 
-                } else {
-                    btn.setText(Integer.toString(neighbours));
-                    gui.setTextColor(btn);
-                }
-            }
-        }
-    }
+				} else {
+					btn.setText(Integer.toString(neighbours));
+					gui.setTextColor(btn);
+				}
+			}
+		}
+	}
 
-	
-	private void showAll() { //Reveals all mines on both boards at game end
+	private void showAll() { // Reveals all mines on both boards at game end
 		gui.revealAllMines(boardA, gui.getButtonsA());
 		gui.revealAllMines(boardB, gui.getButtonsB());
 	}
@@ -377,200 +378,179 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		gui.setActiveBoard(newBoard);
 		gui.updateStatus(sharedScore, sharedLives);
 	}
-	
+
 	private void handleSurpriseBox(int x, int y, Board board, JButton button) {
-        Cell cell = board.getCells()[x][y];
-        String content = cell.getContent();
+		Cell cell = board.getCells()[x][y];
+		String content = cell.getContent();
 
-        // FIRST CLICK – reveal, +1 point (like empty)
-        if (content.equals("")) {
-            button.setBackground(Color.ORANGE);
-            button.setIcon(null);
-            button.setText("🎁");
-            button.setFont(new Font("Serif", Font.BOLD, 18));
-            button.setForeground(Color.RED);
+		// FIRST CLICK – reveal, +1 point (like empty)
+		if (content.equals("")) {
+			button.setBackground(Color.ORANGE);
+			button.setIcon(null);
+			button.setText("🎁");
+			button.setFont(new Font("Serif", Font.BOLD, 18));
+			button.setForeground(Color.RED);
 
-            cell.setContent("🎁");
+			cell.setContent("🎁");
 
-            sharedScore += 1;
-            gui.updateStatus(sharedScore, sharedLives);
-            return;
-        }
+			sharedScore += 1;
+			gui.updateStatus(sharedScore, sharedLives);
+			return;
+		}
 
-        if (content.equals("USED")) {
-            return;
-        }
+		if (content.equals("USED")) {
+			return;
+		}
 
-        // SECOND CLICK – activation with cost and good/bad effect
-        if (content.equals("🎁")) {
-            int choice = JOptionPane.showConfirmDialog(
-                    gui,
-                    "Do you want to activate the surprise box?\n" +
-                    "(Activation will cost " + getActivationCost() + " points.)",
-                    "Activate Surprise?",
-                    JOptionPane.YES_NO_OPTION
-            );
+		// SECOND CLICK – activation with cost and good/bad effect
+		if (content.equals("🎁")) {
+			int choice = JOptionPane
+					.showConfirmDialog(gui,
+							"Do you want to activate the surprise box?\n" + "(Activation will cost "
+									+ getActivationCost() + " points.)",
+							"Activate Surprise?", JOptionPane.YES_NO_OPTION);
 
-            if (choice != JOptionPane.YES_OPTION) {
-                return;
-            }
+			if (choice != JOptionPane.YES_OPTION) {
+				return;
+			}
 
-            int activationCost = getActivationCost();
-            int surprisePts    = getSurprisePoints();
+			int activationCost = getActivationCost();
+			int surprisePts = getSurprisePoints();
 
-            boolean isBonus = rng.nextBoolean();
+			boolean isBonus = rng.nextBoolean();
 
-            int deltaPts  = -activationCost;
-            int deltaLives = 0;
+			int deltaPts = -activationCost;
+			int deltaLives = 0;
 
-            if (isBonus) {
-                deltaPts  += surprisePts; // +8 / +12 / +16
-                deltaLives = +1;
-                button.setBackground(Color.GREEN);
-            } else {
-                deltaPts  -= surprisePts; // -8 / -12 / -16
-                deltaLives = -1;
-                button.setBackground(Color.RED);
-            }
+			if (isBonus) {
+				deltaPts += surprisePts; // +8 / +12 / +16
+				deltaLives = +1;
+				button.setBackground(Color.GREEN);
+			} else {
+				deltaPts -= surprisePts; // -8 / -12 / -16
+				deltaLives = -1;
+				button.setBackground(Color.RED);
+			}
 
-            sharedScore += deltaPts;
-            sharedLives += deltaLives;
-            clampLives();
+			sharedScore += deltaPts;
+			sharedLives += deltaLives;
+			clampLives();
 
-            button.setIcon(null);
-            button.setText("USED");
-            button.setFont(new Font("Serif", Font.BOLD, 16));
-            button.setForeground(Color.LIGHT_GRAY);
+			button.setIcon(null);
+			button.setText("USED");
+			button.setFont(new Font("Serif", Font.BOLD, 16));
+			button.setForeground(Color.LIGHT_GRAY);
 
-            cell.setContent("USED");
-            cell.setSpecialBox(SpecialBoxType.NONE);
+			cell.setContent("USED");
+			cell.setSpecialBox(SpecialBoxType.NONE);
 
-            gui.updateStatus(sharedScore, sharedLives);
+			gui.updateStatus(sharedScore, sharedLives);
 
-            // MESSAGE – what happened
-            StringBuilder msg = new StringBuilder();
-            msg.append("Surprise box result:\n\n");
-            msg.append("Activation cost: -").append(activationCost).append(" pts\n");
-            int effectPts = deltaPts + activationCost; // רק האפקט (לא העלות)
-            msg.append("Surprise effect points: ")
-               .append(effectPts >= 0 ? "+" : "")
-               .append(effectPts)
-               .append(" pts");
+			// MESSAGE – what happened
+			StringBuilder msg = new StringBuilder();
+			msg.append("Surprise box result:\n\n");
+			msg.append("Activation cost: -").append(activationCost).append(" pts\n");
+			int effectPts = deltaPts + activationCost; // רק האפקט (לא העלות)
+			msg.append("Surprise effect points: ").append(effectPts >= 0 ? "+" : "").append(effectPts).append(" pts");
 
-            if (deltaLives != 0) {
-                msg.append("\nLife change: ")
-                   .append(deltaLives > 0 ? "+" : "")
-                   .append(deltaLives)
-                   .append(" ♥");
-            }
+			if (deltaLives != 0) {
+				msg.append("\nLife change: ").append(deltaLives > 0 ? "+" : "").append(deltaLives).append(" ♥");
+			}
 
-            msg.append("\n\nTotal points change: ")
-               .append(deltaPts >= 0 ? "+" : "")
-               .append(deltaPts)
-               .append(" pts");
+			msg.append("\n\nTotal points change: ").append(deltaPts >= 0 ? "+" : "").append(deltaPts).append(" pts");
 
-            msg.append("\nTotal score: ").append(sharedScore)
-               .append("\nTotal lives: ").append(sharedLives);
+			msg.append("\nTotal score: ").append(sharedScore).append("\nTotal lives: ").append(sharedLives);
 
-            JOptionPane.showMessageDialog(
-                    gui,
-                    msg.toString(),
-                    "Surprise Box",
-                    JOptionPane.INFORMATION_MESSAGE
-            );
+			JOptionPane.showMessageDialog(gui, msg.toString(), "Surprise Box", JOptionPane.INFORMATION_MESSAGE);
 
-            if (sharedLives <= 0) {
-                gameLost();
-            }
-        }
-    }
+			if (sharedLives <= 0) {
+				gameLost();
+			}
+		}
+	}
 
-	 private void handleQuestionBox(int x, int y, Board board, JButton button) {
-	        Cell cell = board.getCells()[x][y];
-	        String content = cell.getContent();
+	private void handleQuestionBox(int x, int y, Board board, JButton button) {
+		Cell cell = board.getCells()[x][y];
+		String content = cell.getContent();
 
-	        if (content.equals("")) {
-	            // Reveal question
-	            button.setBackground(Color.YELLOW);
-	            button.setIcon(null);
-	            button.setText("❓");
-	            button.setFont(new Font("Serif", Font.BOLD, 18));
-	            button.setForeground(Color.RED);
+		if (content.equals("")) {
+			// Reveal question
+			button.setBackground(Color.YELLOW);
+			button.setIcon(null);
+			button.setText("❓");
+			button.setFont(new Font("Serif", Font.BOLD, 18));
+			button.setForeground(Color.RED);
 
-	            cell.setContent("❓");
+			cell.setContent("❓");
 
-	            sharedScore += 1;
-	            gui.updateStatus(sharedScore, sharedLives);
+			sharedScore += 1;
+			gui.updateStatus(sharedScore, sharedLives);
 
-	            // 🔥 NEW: expand empty neighbors like normal empty cell
-	            findZeroes(x, y, board, (board == boardA ? gui.getButtonsA() : gui.getButtonsB()));
+			// 🔥 NEW: expand empty neighbors like normal empty cell
+			findZeroes(x, y, board, (board == boardA ? gui.getButtonsA() : gui.getButtonsB()));
 
-	            return;
-	        }
+			return;
+		}
 
-	        if (content.equals("USED")) {
-	            return;
-	        }
+		if (content.equals("USED")) {
+			return;
+		}
 
-	        // SECOND CLICK – answer question
-	        if (content.equals("❓")) {
-	            int choice = JOptionPane.showConfirmDialog(
-	                    gui,
-	                    "Do you want to answer the question now?\n" +
-	                    "(Activation will cost " + getActivationCost() + " points.)",
-	                    "Answer Question?",
-	                    JOptionPane.YES_NO_OPTION
-	            );
+		// SECOND CLICK – answer question
+		if (content.equals("❓")) {
+			int choice = JOptionPane.showConfirmDialog(gui, "Do you want to answer the question now?\n"
+					+ "(Activation will cost " + getActivationCost() + " points.)", "Answer Question?",
+					JOptionPane.YES_NO_OPTION);
 
-	            if (choice != JOptionPane.YES_OPTION) {
-	                return;
-	            }
+			if (choice != JOptionPane.YES_OPTION) {
+				return;
+			}
 
-	            var opt = sysData.nextQuestion();
-	            if (opt.isEmpty()) {
-	                gui.showNoMoreQuestionsDialog();
-	                return;
-	            }
+			var opt = sysData.nextQuestion();
+			if (opt.isEmpty()) {
+				gui.showNoMoreQuestionsDialog();
+				return;
+			}
 
-	            Question q = opt.get();
+			Question q = opt.get();
 
-	            Object answer = gui.askQuestion(q);
-	       
+			Object answer = gui.askQuestion(q);
 
-	            int selectedIndex = q.getOptions().indexOf(answer.toString());
-	            boolean correct = (selectedIndex == q.getCorrectIndex());
+			int selectedIndex = q.getOptions().indexOf(answer.toString());
+			boolean correct = (selectedIndex == q.getCorrectIndex());
 
-	            if (correct) {
-	                button.setBackground(Color.GREEN);
-	                gui.showCorrectAnswerDialog();
-	            } else {
-	                button.setBackground(Color.RED);
-	                gui.showWrongAnswerDialog();
-	            }
+			if (correct) {
+				button.setBackground(Color.GREEN);
+				gui.showCorrectAnswerDialog();
+			} else {
+				button.setBackground(Color.RED);
+				gui.showWrongAnswerDialog();
+			}
 
-	            button.setIcon(null);
-	            button.setText("USED");
-	            button.setFont(new Font("Serif", Font.BOLD, 16));
-	            button.setForeground(Color.LIGHT_GRAY);
+			button.setIcon(null);
+			button.setText("USED");
+			button.setFont(new Font("Serif", Font.BOLD, 16));
+			button.setForeground(Color.LIGHT_GRAY);
 
-	            cell.setContent("USED");
-	            cell.setSpecialBox(SpecialBoxType.NONE);
+			cell.setContent("USED");
+			cell.setSpecialBox(SpecialBoxType.NONE);
 
-	            // טבלת הניקוד (כולל עלות ההפעלה החדשה)
-	            applyQuestionOutcome(currentDifficulty, q.getDifficulty(), correct, board);
-	        }
-	    }
-	private void handleMineClick(int x, int y, Board board, JButton button) { // Reduces a life, shows mine explosion, updates status, and may end the game.
+			// טבלת הניקוד (כולל עלות ההפעלה החדשה)
+			applyQuestionOutcome(currentDifficulty, q.getDifficulty(), correct, board);
+		}
+	}
+
+	private void handleMineClick(int x, int y, Board board, JButton button) { // Reduces a life, shows mine explosion,
+																				// updates status, and may end the game.
 
 		Cell cell = board.getCells()[x][y];
 
-		sharedLives -= 1; 
+		sharedLives -= 1;
 
 		button.setIcon(gui.getIconRedMine());
 		button.setBackground(Color.RED);
 		cell.setContent("M");
 
-		
 		gui.showMineHitDialog();
 
 		gui.updateStatus(sharedScore, sharedLives);
@@ -583,8 +563,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		switchTurn();
 	}
 
-	
-	private int countRemainingMines(Board board) { //Counts unrevealed mines on a specific board
+	private int countRemainingMines(Board board) { // Counts unrevealed mines on a specific board
 		int count = 0;
 		Cell[][] cells = board.getCells();
 
@@ -599,15 +578,15 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		}
 		return count;
 	}
-	
-	private void updateMineCounters() { //Updates displayed mine counters for both boards.
+
+	private void updateMineCounters() { // Updates displayed mine counters for both boards.
 		int a = countRemainingMines(boardA);
 		int b = countRemainingMines(boardB);
 		gui.updateMinesLeft(a, b);
 	}
-	@Override
-	public void windowClosing(WindowEvent e) { //Logs a QUIT result, saves data, interrupts timer, and exits safely.
 
+	@Override
+	public void windowClosing(WindowEvent e) { // Logs a QUIT result, saves data, interrupts timer, and exits safely.
 
 		if (gui != null) {
 			gui.interruptTimer();
@@ -623,7 +602,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	}
 
 	@Override
-	public void actionPerformed(ActionEvent e) { //Handles menu actions like starting a new game.
+	public void actionPerformed(ActionEvent e) { // Handles menu actions like starting a new game.
 
 		JMenuItem menuItem = (JMenuItem) e.getSource();
 
@@ -640,188 +619,366 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 					score.save();
 				}
 			} else {
-			  newGame();
+				newGame();
 			}
 		}
-			
-	
+
 	}
-	
+
 	private void evaluateFlags() {
-	    if (boardA != null && gui != null) {
-	        evaluateFlagsOnBoard(boardA, gui.getButtonsA());
-	    }
-	    if (boardB != null && gui != null) {
-	        evaluateFlagsOnBoard(boardB, gui.getButtonsB());
-	    }
+		if (boardA != null && gui != null) {
+			evaluateFlagsOnBoard(boardA, gui.getButtonsA());
+		}
+		if (boardB != null && gui != null) {
+			evaluateFlagsOnBoard(boardB, gui.getButtonsB());
+		}
 
-	    gui.updateStatus(sharedScore, sharedLives);
+		gui.updateStatus(sharedScore, sharedLives);
 	}
-	
- 
+
 	private void evaluateFlagsOnBoard(Board board, JButton[][] buttons) {
-	    Cell[][] cells = board.getCells();
+		Cell[][] cells = board.getCells();
 
-	    for (int x = 0; x < board.getCols(); x++) {
-	        for (int y = 0; y < board.getRows(); y++) {
-	            Cell cell = cells[x][y];
-	            JButton button = buttons[x][y];
+		for (int x = 0; x < board.getCols(); x++) {
+			for (int y = 0; y < board.getRows(); y++) {
+				Cell cell = cells[x][y];
+				JButton button = buttons[x][y];
 
-	            // רק משבצות שעדיין מסומנות בדגל
-	            if (!"F".equals(cell.getContent())) {
-	                continue;
-	            }
+				// רק משבצות שעדיין מסומנות בדגל
+				if (!"F".equals(cell.getContent())) {
+					continue;
+				}
 
-	            // אם כבר הערכנו את הדגל הזה (יש LineBorder) – לא מחשבים שוב
-	            if (button.getBorder() instanceof LineBorder) {
-	                continue;
-	            }
+				// אם כבר הערכנו את הדגל הזה (יש LineBorder) – לא מחשבים שוב
+				if (button.getBorder() instanceof LineBorder) {
+					continue;
+				}
 
-	            if (cell.getMine()) {
-	                // ❇ דגל נכון על מוקש:
-	                // +1 נקודה וחושפים את המוקש
-	                sharedScore += 1;
+				if (cell.getMine()) {
+					// ❇ דגל נכון על מוקש:
+					// +1 נקודה וחושפים את המוקש
+					sharedScore += 1;
 
-	                cell.setContent("M");                  // עכשיו זה מוקש גלוי
-	                button.setIcon(gui.getIconMine());     // אייקון המוקש הרגיל
-	                button.setText("");                    // לא צריך "F" יותר
-	                button.setBackground(Color.DARK_GRAY); // או כל צבע שאתה אוהב
-	                button.setBorder(new LineBorder(Color.GREEN, 2, true));
-	            } else {
-	                // ❌ דגל שגוי (על ריקה / מספר / הפתעה / שאלה): -3 נק'
-	                sharedScore -= 3;
-	                button.setBorder(new LineBorder(Color.RED, 2, true));
-	                // כאן במפורש *לא* חושפים את המשבצת – רק מסמנים שהדגל היה שגוי
-	                // (החוקים שלך לא דורשים לחשוף במקרה הזה)
-	            }
-	        }
-	    }
+					cell.setContent("M"); // עכשיו זה מוקש גלוי
+					button.setIcon(gui.getIconMine()); // אייקון המוקש הרגיל
+					button.setText(""); // לא צריך "F" יותר
+					button.setBackground(Color.DARK_GRAY); // או כל צבע שאתה אוהב
+					button.setBorder(new LineBorder(Color.GREEN, 2, true));
+				} else {
+					// ❌ דגל שגוי (על ריקה / מספר / הפתעה / שאלה): -3 נק'
+					sharedScore -= 3;
+					button.setBorder(new LineBorder(Color.RED, 2, true));
+					// כאן במפורש *לא* חושפים את המשבצת – רק מסמנים שהדגל היה שגוי
+					// (החוקים שלך לא דורשים לחשוף במקרה הזה)
+				}
+			}
+		}
 	}
-	
-	
-	 public void mouseClicked(MouseEvent e) {
 
-	        if (!playing) {
-	            gui.startTimer();
-	            playing = true;
-	        }
-	        if (!playing)
-	            return;
+	public void mouseClicked(MouseEvent e) {
 
-	        JButton button = (JButton) e.getSource();
-	        String boardTag = (String) button.getClientProperty("board");
+		if (!playing) {
+			gui.startTimer();
+			playing = true;
+		}
+		if (!playing)
+			return;
 
-	        if (!boardTag.equals(gui.getActiveBoard()))
-	            return;
+		JButton button = (JButton) e.getSource();
+		String boardTag = (String) button.getClientProperty("board");
 
-	        Board board = boardTag.equals("A") ? boardA : boardB;
-	        JButton[][] buttons = boardTag.equals("A") ? gui.getButtonsA() : gui.getButtonsB();
+		if (!boardTag.equals(gui.getActiveBoard()))
+			return;
 
-	        String[] parts = button.getName().split(":");
-	        if (parts.length < 2)
-	            return;
+		Board board = boardTag.equals("A") ? boardA : boardB;
+		JButton[][] buttons = boardTag.equals("A") ? gui.getButtonsA() : gui.getButtonsB();
 
-	        String[] co = parts[1].split(",");
-	        int x = Integer.parseInt(co[0]);
-	        int y = Integer.parseInt(co[1]);
+		String[] parts = button.getName().split(":");
+		if (parts.length < 2)
+			return;
 
-	        Cell cell = board.getCells()[x][y];
-	        String content = cell.getContent();
-	        if (content == null) content = "";
+		String[] co = parts[1].split(",");
+		int x = Integer.parseInt(co[0]);
+		int y = Integer.parseInt(co[1]);
 
-	        SpecialBoxType specialBox = cell.getSpecialBox();
+		Cell cell = board.getCells()[x][y];
+		String content = cell.getContent();
+		if (content == null)
+			content = "";
 
-	        boolean isLeft = SwingUtilities.isLeftMouseButton(e);
-	        if (!isLeft)
-	            return;
+		SpecialBoxType specialBox = cell.getSpecialBox();
 
-	        // -------- FLAG MODE --------
-	        if (flagMode) {
-	            handleFlagClick(x, y, board, button);
-	           
-	            return;
-	        }
+		boolean isLeft = SwingUtilities.isLeftMouseButton(e);
+		if (!isLeft)
+			return;
 
-	        // ignore click on a flagged cell
-	        if (content.equals("F"))
-	            return;
+		// -------- FLAG MODE --------
+		if (flagMode) {
+			handleFlagClick(x, y, board, button);
 
-	        boolean isMine = cell.getMine();
-	        int neighbours = cell.getSurroundingMines();
+			return;
+		}
 
-	        // ⭐ FIX: if this is a mine that is already revealed ("M"), ignore click
-	        if (isMine && "M".equals(content)) {
-	            return;
-	        }
+		// ignore click on a flagged cell
+		if (content.equals("F"))
+			return;
 
-	        // ⭐ FIX: only clear icon if this is NOT an already-revealed mine
-	        if (!"M".equals(content)) {
-	            button.setIcon(null);
-	        }
+		boolean isMine = cell.getMine();
+		int neighbours = cell.getSurroundingMines();
 
-	        // if cell already has content (number, USED, etc.) – only allow clicking special boxes
-	        if (!content.equals("")) {
-	            boolean isClickableSpecial =
-	                    (specialBox == SpecialBoxType.SURPRISE && content.equals("🎁")) ||
-	                    (specialBox == SpecialBoxType.QUESTION && content.equals("❓"));
+		// ⭐ FIX: if this is a mine that is already revealed ("M"), ignore click
+		if (isMine && "M".equals(content)) {
+			return;
+		}
 
-	            if (!isClickableSpecial)
-	                return;
-	        }
+		// ⭐ FIX: only clear icon if this is NOT an already-revealed mine
+		if (!"M".equals(content)) {
+			button.setIcon(null);
+		}
 
-	        // -------- SPECIAL BOXES / MINES / NORMAL CELLS --------
-	        if (specialBox == SpecialBoxType.SURPRISE) {
+		// if cell already has content (number, USED, etc.) – only allow clicking
+		// special boxes
+		if (!content.equals("")) {
+			boolean isClickableSpecial = (specialBox == SpecialBoxType.SURPRISE && content.equals("🎁"))
+					|| (specialBox == SpecialBoxType.QUESTION && content.equals("❓"));
 
-	            String before = cell.getContent();
-	            handleSurpriseBox(x, y, board, button);
-	            String after = cell.getContent();
+			if (!isClickableSpecial)
+				return;
+		}
 
-	            if (before.equals("") || "USED".equals(after))
-	                switchTurn();
+		// -------- SPECIAL BOXES / MINES / NORMAL CELLS --------
+		if (specialBox == SpecialBoxType.SURPRISE) {
 
-	        } else if (specialBox == SpecialBoxType.QUESTION) {
+			String before = cell.getContent();
+			handleSurpriseBox(x, y, board, button);
+			String after = cell.getContent();
 
-	            String before = cell.getContent();
-	            handleQuestionBox(x, y, board, button);
-	            String after = cell.getContent();
+			if (before.equals("") || "USED".equals(after))
+				switchTurn();
 
-	            if (before.equals("") || "USED".equals(after))
-	                switchTurn();
+		} else if (specialBox == SpecialBoxType.QUESTION) {
 
-	        } else if (isMine) {
-	            // first-time click on hidden mine
-	            handleMineClick(x, y, board, button);
+			String before = cell.getContent();
+			handleQuestionBox(x, y, board, button);
+			String after = cell.getContent();
 
-	        } else {
-	            // safe cell
-	            sharedScore += 1;
-	            gui.updateStatus(sharedScore, sharedLives);
+			if (before.equals("") || "USED".equals(after))
+				switchTurn();
 
-	            cell.setContent(Integer.toString(neighbours));
-	            button.setBackground(gui.CELL_REVEALED);
+		} else if (isMine) {
+			// first-time click on hidden mine
+			handleMineClick(x, y, board, button);
 
-	            if (neighbours == 0) {
-	                button.setText("·");
-	                button.setForeground(new Color(160, 170, 200, 100));
-	                button.setFont(new Font("Arial", Font.BOLD, 24));
+		} else {
+			// safe cell
+			sharedScore += 1;
+			gui.updateStatus(sharedScore, sharedLives);
 
-	                findZeroes(x, y, board, buttons);
-	            } else {
-	                button.setText(Integer.toString(neighbours));
-	                gui.setTextColor(button);
-	            }
+			cell.setContent(Integer.toString(neighbours));
+			button.setBackground(gui.CELL_REVEALED);
 
-	            switchTurn();
-	        }
+			if (neighbours == 0) {
+				button.setText("·");
+				button.setForeground(new Color(160, 170, 200, 100));
+				button.setFont(new Font("Arial", Font.BOLD, 24));
 
-	        updateMineCounters();
-	        checkGame();
-	    }
+				findZeroes(x, y, board, buttons);
+			} else {
+				button.setText(Integer.toString(neighbours));
+				gui.setTextColor(button);
+			}
 
-	
-	
-	
-	
+			switchTurn();
+		}
+
+		updateMineCounters();
+		checkGame();
+	}
+
+	private void applyQuestionOutcome(Difficulty gameDiff, QuestionDifficulty qDiff, boolean correct, Board board) {
+
+		int activationCost = getActivationCost(gameDiff);
+
+		int deltaPts = -activationCost; // משלמים עלות הפעלה
+		int deltaLives = 0;
+		boolean revealMine = false;
+		boolean reveal3x3 = false;
+
+		boolean pickFirst = rng.nextBoolean(); // ל־OR בטבלה
+
+// EASY game
+		if (gameDiff == Difficulty.EASY) {
+			switch (qDiff) {
+			case EASY -> {
+				if (correct) {
+					deltaPts += 3;
+					deltaLives += 1;
+				} else {
+					if (pickFirst)
+						deltaPts -= 3;
+				}
+			}
+			case MEDIUM -> {
+				if (correct) {
+					deltaPts += 6;
+					revealMine = true;
+				} else {
+					if (pickFirst)
+						deltaPts -= 6;
+				}
+			}
+			case HARD -> {
+				if (correct) {
+					deltaPts += 10;
+					reveal3x3 = true;
+				} else {
+					deltaPts -= 10;
+				}
+			}
+			case EXPERT -> {
+				if (correct) {
+					deltaPts += 15;
+					deltaLives += 2;
+				} else {
+					deltaPts -= 15;
+					deltaLives -= 1;
+				}
+			}
+			}
+		}
+
+// MEDIUM game
+		if (gameDiff == Difficulty.MEDIUM) {
+			switch (qDiff) {
+			case EASY -> {
+				if (correct) {
+					deltaPts += 8;
+					deltaLives += 1;
+				} else {
+					deltaPts -= 8;
+				}
+			}
+			case MEDIUM -> {
+				if (correct) {
+					deltaPts += 10;
+					deltaLives += 1;
+				} else {
+					if (pickFirst) {
+						deltaPts -= 10;
+						deltaLives -= 1;
+					}
+				}
+			}
+			case HARD -> {
+				if (correct) {
+					deltaPts += 15;
+					deltaLives += 1;
+				} else {
+					deltaPts -= 15;
+					deltaLives -= 1;
+				}
+			}
+			case EXPERT -> {
+				if (correct) {
+					deltaPts += 20;
+					deltaLives += 2;
+				} else {
+					deltaPts -= 20;
+					deltaLives -= (pickFirst ? 1 : 2);
+				}
+			}
+			}
+		}
+
+// HARD game
+		if (gameDiff == Difficulty.HARD) {
+			switch (qDiff) {
+			case EASY -> {
+				if (correct) {
+					deltaPts += 10;
+					deltaLives += 1;
+				} else {
+					deltaPts -= 10;
+					deltaLives -= 1;
+				}
+			}
+			case MEDIUM -> {
+				if (correct) {
+					deltaPts += 15;
+					deltaLives += (pickFirst ? 1 : 2);
+				} else {
+					deltaPts -= 15;
+					deltaLives -= (pickFirst ? 1 : 2);
+				}
+			}
+			case HARD -> {
+				if (correct) {
+					deltaPts += 20;
+					deltaLives += 2;
+				} else {
+					deltaPts -= 20;
+					deltaLives -= 2;
+				}
+			}
+			case EXPERT -> {
+				if (correct) {
+					deltaPts += 40;
+					deltaLives += 3;
+				} else {
+					deltaPts -= 40;
+					deltaLives -= 3;
+				}
+			}
+			}
+		}
+
+		sharedScore += deltaPts;
+		sharedLives += deltaLives;
+		clampLives();
+
+		if (revealMine) {
+			revealRandomMine(board);
+		}
+		if (reveal3x3) {
+			revealRandom3x3(board);
+		}
+
+		gui.updateStatus(sharedScore, sharedLives);
+
+// הודעת סיכום לשאלה
+		StringBuilder msg = new StringBuilder();
+		msg.append("Question result (").append(gameDiff.name()).append(" game, ").append(qDiff.name())
+				.append(" question)\n\n");
+
+		msg.append(correct ? "✅ Correct answer!\n" : "❌ Wrong answer.\n");
+
+		msg.append("Activation cost: -").append(activationCost).append(" pts\n");
+
+		int effectPts = deltaPts + activationCost; // רק האפקט מעבר לעלות
+		msg.append("Question effect points: ").append(effectPts >= 0 ? "+" : "").append(effectPts).append(" pts");
+
+		if (deltaLives != 0) {
+			msg.append("\nLife change: ").append(deltaLives > 0 ? "+" : "").append(deltaLives).append(" ♥");
+		}
+
+		if (revealMine) {
+			msg.append("\n\nA random mine on your board was revealed.");
+		}
+		if (reveal3x3) {
+			msg.append("\nA 3×3 area on your board was revealed.");
+		}
+
+		msg.append("\n\nTotal points change: ").append(deltaPts >= 0 ? "+" : "").append(deltaPts).append(" pts");
+
+		msg.append("\nTotal score: ").append(sharedScore).append("\nTotal lives: ").append(sharedLives);
+
+		JOptionPane.showMessageDialog(gui, msg.toString(), "Question Outcome", JOptionPane.INFORMATION_MESSAGE);
+
+		if (sharedLives <= 0) {
+			gameLost();
+		}
+	}
+
 	@Override
 	public void mousePressed(MouseEvent e) {
 	}
@@ -862,5 +1019,3 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	public void windowDeactivated(WindowEvent e) {
 	}
 }
-
-	
