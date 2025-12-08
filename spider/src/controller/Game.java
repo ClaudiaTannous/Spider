@@ -609,6 +609,127 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 			
 	
 	}
+	
+	public void mouseClicked(MouseEvent e) {
+
+        if (!playing) {
+            gui.startTimer();
+            playing = true;
+        }
+        if (!playing)
+            return;
+
+        JButton button = (JButton) e.getSource();
+        String boardTag = (String) button.getClientProperty("board");
+
+        if (!boardTag.equals(gui.getActiveBoard()))
+            return;
+
+        Board board = boardTag.equals("A") ? boardA : boardB;
+        JButton[][] buttons = boardTag.equals("A") ? gui.getButtonsA() : gui.getButtonsB();
+
+        String[] parts = button.getName().split(":");
+        if (parts.length < 2)
+            return;
+
+        String[] co = parts[1].split(",");
+        int x = Integer.parseInt(co[0]);
+        int y = Integer.parseInt(co[1]);
+
+        Cell cell = board.getCells()[x][y];
+        String content = cell.getContent();
+        if (content == null) content = "";
+
+        SpecialBoxType specialBox = cell.getSpecialBox();
+
+        boolean isLeft = SwingUtilities.isLeftMouseButton(e);
+        if (!isLeft)
+            return;
+
+        // -------- FLAG MODE --------
+        if (flagMode) {
+            handleFlagClick(x, y, board, button);
+           
+            return;
+        }
+
+        // ignore click on a flagged cell
+        if (content.equals("F"))
+            return;
+
+        boolean isMine = cell.getMine();
+        int neighbours = cell.getSurroundingMines();
+
+        // ⭐ FIX: if this is a mine that is already revealed ("M"), ignore click
+        if (isMine && "M".equals(content)) {
+            return;
+        }
+
+        // ⭐ FIX: only clear icon if this is NOT an already-revealed mine
+        if (!"M".equals(content)) {
+            button.setIcon(null);
+        }
+
+        // if cell already has content (number, USED, etc.) – only allow clicking special boxes
+        if (!content.equals("")) {
+            boolean isClickableSpecial =
+                    (specialBox == SpecialBoxType.SURPRISE && content.equals("🎁")) ||
+                    (specialBox == SpecialBoxType.QUESTION && content.equals("❓"));
+
+            if (!isClickableSpecial)
+                return;
+        }
+
+        // -------- SPECIAL BOXES / MINES / NORMAL CELLS --------
+        if (specialBox == SpecialBoxType.SURPRISE) {
+
+            String before = cell.getContent();
+            handleSurpriseBox(x, y, board, button);
+            String after = cell.getContent();
+
+            if (before.equals("") || "USED".equals(after))
+                switchTurn();
+
+        } else if (specialBox == SpecialBoxType.QUESTION) {
+
+            String before = cell.getContent();
+            handleQuestionBox(x, y, board, button);
+            String after = cell.getContent();
+
+            if (before.equals("") || "USED".equals(after))
+                switchTurn();
+
+        } else if (isMine) {
+            // first-time click on hidden mine
+            handleMineClick(x, y, board, button);
+
+        } else {
+            // safe cell
+            sharedScore += 1;
+            gui.updateStatus(sharedScore, sharedLives);
+
+            cell.setContent(Integer.toString(neighbours));
+            button.setBackground(gui.CELL_REVEALED);
+
+            if (neighbours == 0) {
+                button.setText("·");
+                button.setForeground(new Color(160, 170, 200, 100));
+                button.setFont(new Font("Arial", Font.BOLD, 24));
+
+                findZeroes(x, y, board, buttons);
+            } else {
+                button.setText(Integer.toString(neighbours));
+                gui.setTextColor(button);
+            }
+
+            switchTurn();
+        }
+
+        updateMineCounters();
+        checkGame();
+    }
+	
+	
 	@Override
 	public void mousePressed(MouseEvent e) {
 	}
