@@ -200,28 +200,44 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		showAll();
 		score.save();
 	}
+    private void convertRemainingLivesToPoints() {
+        if (sharedLives <= 0) {
+            return;
+        }
 
-	public void gameWon() { //Calculates bonus points for remaining lives, updates score/streaks, logs a WIN, shows victory dialog, and saves score/times.
-		int lifeValue = currentDifficulty.getQuestionPoints();
-		int bonus = sharedLives * lifeValue;
-		sharedScore += bonus;
+        int lifeValue = getActivationCost();     
+        int bonus = sharedLives * lifeValue;      
 
-		score.incCurrentStreak();
-		score.incCurrentWinningStreak();
-		score.incGamesWon();
-		score.incGamesPlayed();
+        sharedScore += bonus;
+        sharedLives = 0;                         
 
-		gui.interruptTimer();
-		endGame();
+       
+        if (gui != null) {
+            gui.updateStatus(sharedScore, sharedLives);
+        }
+    }
 
-		sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "WIN",
-				gui.getTimePassed());
 
-		gui.showVictoryDialog(sharedScore, gui.getTimePassed());
+	 public void gameWon() {
+	        // קודם ממירים חיים לנקודות לפי הכלל החדש
+	        convertRemainingLivesToPoints();
 
-		score.addTime(gui.getTimePassed(), new Date(System.currentTimeMillis()));
-		score.save();
-	}
+	        score.incCurrentStreak();
+	        score.incCurrentWinningStreak();
+	        score.incGamesWon();
+	        score.incGamesPlayed();
+
+	        gui.interruptTimer();
+	        endGame();
+
+	        sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "WIN",
+	                gui.getTimePassed());
+
+	        gui.showVictoryDialog(sharedScore, gui.getTimePassed());
+
+	        score.addTime(gui.getTimePassed(), new Date(System.currentTimeMillis()));
+	        score.save();
+	    }
 
 	 public void gameLost() {
 	        // אם במקרה נשארו חיים (לא סביר אצלך, אבל לפי ההגדרה זה נכון)
