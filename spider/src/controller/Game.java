@@ -1,6 +1,7 @@
 package controller;
 
 import javax.swing.*;
+import javax.swing.border.LineBorder;
 
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -517,84 +518,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		switchTurn();
 	}
 
-	@Override
-	public void mouseClicked(MouseEvent e) { // Handles cell clicks: reveals content, triggers events, switches turns, updates mine counts, and checks win/loss.
-
-
-	  
-	    if (!playing) {
-	        gui.startTimer();
-	        playing = true;
-	    }
-	    if (!playing)
-	        return;
-
-	    JButton button = (JButton) e.getSource();
-	    String boardTag = (String) button.getClientProperty("board");
-	    if (!boardTag.equals(gui.getActiveBoard()))
-	        return;
-
-	    Board board = boardTag.equals("A") ? boardA : boardB;
-	    JButton[][] buttons = boardTag.equals("A") ? gui.getButtonsA() : gui.getButtonsB();
-
-	    String[] parts = button.getName().split(":");
-	    if (parts.length < 2)
-	        return;
-	    String[] co = parts[1].split(",");
-	    int x = Integer.parseInt(co[0]);
-	    int y = Integer.parseInt(co[1]);
-
-	    Cell cell = board.getCells()[x][y];
-	    String content = cell.getContent();
-
-	  
-	    if (!SwingUtilities.isLeftMouseButton(e)) {
-	        return;
-	    }
-
-	   
-	    if (!content.equals("")) {
-	        return;
-	    }
-
-	    button.setIcon(null);
-
-	    boolean isMine = cell.getMine();
-	    int neighbours = cell.getSurroundingMines();
-	    SpecialBoxType specialBox = cell.getSpecialBox();
-
-	    if (specialBox == SpecialBoxType.SURPRISE) {
-	        handleSurpriseBox(x, y, board, button);
-	        switchTurn();
-	    } else if (specialBox == SpecialBoxType.QUESTION) {
-	        handleQuestionBox(x, y, board, button);
-	        switchTurn();
-	    } else if (isMine) {
-	        handleMineClick(x, y, board, button);
-	    } else {
-	     
-	        cell.setContent(Integer.toString(neighbours));
-	        button.setText(Integer.toString(neighbours));
-	        gui.setTextColor(button);
-	        button.setBackground(gui.CELL_REVEALED);
-
-	        
-	        if (neighbours == 0) {
-	            sharedScore += 1;
-	            gui.updateStatus(sharedScore, sharedLives);
-
-	            button.setText("·");
-	            button.setForeground(new Color(160, 170, 200, 100));
-	            button.setFont(new Font("Arial", Font.BOLD, 24));
-	            findZeroes(x, y, board, buttons);
-	        }
-
-	        switchTurn();
-	    }
-
-	    updateMineCounters();
-	    checkGame();
-	}
+	
 	private int countRemainingMines(Board board) { //Counts unrevealed mines on a specific board
 		int count = 0;
 		Cell[][] cells = board.getCells();
@@ -710,124 +634,127 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	}
 	
 	
-	public void mouseClicked(MouseEvent e) {
+	 public void mouseClicked(MouseEvent e) {
 
-        if (!playing) {
-            gui.startTimer();
-            playing = true;
-        }
-        if (!playing)
-            return;
+	        if (!playing) {
+	            gui.startTimer();
+	            playing = true;
+	        }
+	        if (!playing)
+	            return;
 
-        JButton button = (JButton) e.getSource();
-        String boardTag = (String) button.getClientProperty("board");
+	        JButton button = (JButton) e.getSource();
+	        String boardTag = (String) button.getClientProperty("board");
 
-        if (!boardTag.equals(gui.getActiveBoard()))
-            return;
+	        if (!boardTag.equals(gui.getActiveBoard()))
+	            return;
 
-        Board board = boardTag.equals("A") ? boardA : boardB;
-        JButton[][] buttons = boardTag.equals("A") ? gui.getButtonsA() : gui.getButtonsB();
+	        Board board = boardTag.equals("A") ? boardA : boardB;
+	        JButton[][] buttons = boardTag.equals("A") ? gui.getButtonsA() : gui.getButtonsB();
 
-        String[] parts = button.getName().split(":");
-        if (parts.length < 2)
-            return;
+	        String[] parts = button.getName().split(":");
+	        if (parts.length < 2)
+	            return;
 
-        String[] co = parts[1].split(",");
-        int x = Integer.parseInt(co[0]);
-        int y = Integer.parseInt(co[1]);
+	        String[] co = parts[1].split(",");
+	        int x = Integer.parseInt(co[0]);
+	        int y = Integer.parseInt(co[1]);
 
-        Cell cell = board.getCells()[x][y];
-        String content = cell.getContent();
-        if (content == null) content = "";
+	        Cell cell = board.getCells()[x][y];
+	        String content = cell.getContent();
+	        if (content == null) content = "";
 
-        SpecialBoxType specialBox = cell.getSpecialBox();
+	        SpecialBoxType specialBox = cell.getSpecialBox();
 
-        boolean isLeft = SwingUtilities.isLeftMouseButton(e);
-        if (!isLeft)
-            return;
+	        boolean isLeft = SwingUtilities.isLeftMouseButton(e);
+	        if (!isLeft)
+	            return;
 
-        // -------- FLAG MODE --------
-        if (flagMode) {
-            handleFlagClick(x, y, board, button);
-           
-            return;
-        }
+	        // -------- FLAG MODE --------
+	        if (flagMode) {
+	            handleFlagClick(x, y, board, button);
+	           
+	            return;
+	        }
 
-        // ignore click on a flagged cell
-        if (content.equals("F"))
-            return;
+	        // ignore click on a flagged cell
+	        if (content.equals("F"))
+	            return;
 
-        boolean isMine = cell.getMine();
-        int neighbours = cell.getSurroundingMines();
+	        boolean isMine = cell.getMine();
+	        int neighbours = cell.getSurroundingMines();
 
-        // ⭐ FIX: if this is a mine that is already revealed ("M"), ignore click
-        if (isMine && "M".equals(content)) {
-            return;
-        }
+	        // ⭐ FIX: if this is a mine that is already revealed ("M"), ignore click
+	        if (isMine && "M".equals(content)) {
+	            return;
+	        }
 
-        // ⭐ FIX: only clear icon if this is NOT an already-revealed mine
-        if (!"M".equals(content)) {
-            button.setIcon(null);
-        }
+	        // ⭐ FIX: only clear icon if this is NOT an already-revealed mine
+	        if (!"M".equals(content)) {
+	            button.setIcon(null);
+	        }
 
-        // if cell already has content (number, USED, etc.) – only allow clicking special boxes
-        if (!content.equals("")) {
-            boolean isClickableSpecial =
-                    (specialBox == SpecialBoxType.SURPRISE && content.equals("🎁")) ||
-                    (specialBox == SpecialBoxType.QUESTION && content.equals("❓"));
+	        // if cell already has content (number, USED, etc.) – only allow clicking special boxes
+	        if (!content.equals("")) {
+	            boolean isClickableSpecial =
+	                    (specialBox == SpecialBoxType.SURPRISE && content.equals("🎁")) ||
+	                    (specialBox == SpecialBoxType.QUESTION && content.equals("❓"));
 
-            if (!isClickableSpecial)
-                return;
-        }
+	            if (!isClickableSpecial)
+	                return;
+	        }
 
-        // -------- SPECIAL BOXES / MINES / NORMAL CELLS --------
-        if (specialBox == SpecialBoxType.SURPRISE) {
+	        // -------- SPECIAL BOXES / MINES / NORMAL CELLS --------
+	        if (specialBox == SpecialBoxType.SURPRISE) {
 
-            String before = cell.getContent();
-            handleSurpriseBox(x, y, board, button);
-            String after = cell.getContent();
+	            String before = cell.getContent();
+	            handleSurpriseBox(x, y, board, button);
+	            String after = cell.getContent();
 
-            if (before.equals("") || "USED".equals(after))
-                switchTurn();
+	            if (before.equals("") || "USED".equals(after))
+	                switchTurn();
 
-        } else if (specialBox == SpecialBoxType.QUESTION) {
+	        } else if (specialBox == SpecialBoxType.QUESTION) {
 
-            String before = cell.getContent();
-            handleQuestionBox(x, y, board, button);
-            String after = cell.getContent();
+	            String before = cell.getContent();
+	            handleQuestionBox(x, y, board, button);
+	            String after = cell.getContent();
 
-            if (before.equals("") || "USED".equals(after))
-                switchTurn();
+	            if (before.equals("") || "USED".equals(after))
+	                switchTurn();
 
-        } else if (isMine) {
-            // first-time click on hidden mine
-            handleMineClick(x, y, board, button);
+	        } else if (isMine) {
+	            // first-time click on hidden mine
+	            handleMineClick(x, y, board, button);
 
-        } else {
-            // safe cell
-            sharedScore += 1;
-            gui.updateStatus(sharedScore, sharedLives);
+	        } else {
+	            // safe cell
+	            sharedScore += 1;
+	            gui.updateStatus(sharedScore, sharedLives);
 
-            cell.setContent(Integer.toString(neighbours));
-            button.setBackground(gui.CELL_REVEALED);
+	            cell.setContent(Integer.toString(neighbours));
+	            button.setBackground(gui.CELL_REVEALED);
 
-            if (neighbours == 0) {
-                button.setText("·");
-                button.setForeground(new Color(160, 170, 200, 100));
-                button.setFont(new Font("Arial", Font.BOLD, 24));
+	            if (neighbours == 0) {
+	                button.setText("·");
+	                button.setForeground(new Color(160, 170, 200, 100));
+	                button.setFont(new Font("Arial", Font.BOLD, 24));
 
-                findZeroes(x, y, board, buttons);
-            } else {
-                button.setText(Integer.toString(neighbours));
-                gui.setTextColor(button);
-            }
+	                findZeroes(x, y, board, buttons);
+	            } else {
+	                button.setText(Integer.toString(neighbours));
+	                gui.setTextColor(button);
+	            }
 
-            switchTurn();
-        }
+	            switchTurn();
+	        }
 
-        updateMineCounters();
-        checkGame();
-    }
+	        updateMineCounters();
+	        checkGame();
+	    }
+
+	
+	
 	
 	
 	@Override
