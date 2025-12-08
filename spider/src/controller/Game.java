@@ -223,35 +223,71 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		return true;
 	}
 	
-	private void findZeroes(int x, int y, Board board, JButton[][] buttons) { //Recursively reveals adjacent empty cells surrounding a zero-mine tile.
+	private void findZeroes(int x, int y, Board board, JButton[][] buttons) {
 
+        Cell[][] cells = board.getCells();
 
-		Cell[][] cells = board.getCells();
+        for (int tempX = board.makeValidCoordinateX(x - 1); tempX <= board.makeValidCoordinateX(x + 1); tempX++) {
 
-		for (int tempX = board.makeValidCoordinateX(x - 1); tempX <= board.makeValidCoordinateX(x + 1); tempX++) {
+            for (int tempY = board.makeValidCoordinateY(y - 1); tempY <= board.makeValidCoordinateY(y + 1); tempY++) {
 
-			for (int tempY = board.makeValidCoordinateY(y - 1); tempY <= board.makeValidCoordinateY(y + 1); tempY++) {
+                if (tempX == x && tempY == y)
+                    continue;
 
-				Cell cell = cells[tempX][tempY];
+                Cell cell = cells[tempX][tempY];
+                JButton btn = buttons[tempX][tempY];
 
-				if (cell.getContent().equals("") && !cell.getMine() && cell.getSpecialBox() == SpecialBoxType.NONE) {
+                String c = cell.getContent();
 
-					cell.setContent(Integer.toString(cell.getSurroundingMines()));
+             
+                if (!c.equals("") && !c.equals("❓"))
+                 continue;
 
-					buttons[tempX][tempY].setText(Integer.toString(cell.getSurroundingMines()));
-					gui.setTextColor(buttons[tempX][tempY]);
-					buttons[tempX][tempY].setBackground(gui.CELL_REVEALED);
+                if (cell.getMine())
+                    continue;
 
-					if (cell.getSurroundingMines() == 0) {
-						buttons[tempX][tempY].setText("·");
-						buttons[tempX][tempY].setForeground(new Color(160, 170, 200, 100));
-						buttons[tempX][tempY].setFont(new Font("Arial", Font.BOLD, 24));
-						findZeroes(tempX, tempY, board, buttons);
-					}
-				}
-			}
-		}
-	}
+                SpecialBoxType special = cell.getSpecialBox();
+
+                if (special == SpecialBoxType.SURPRISE) {
+                    cell.setContent("🎁");
+                    btn.setIcon(null);
+                    btn.setText("🎁");
+                    btn.setFont(new Font("Serif", Font.BOLD, 18));
+                    btn.setForeground(Color.RED);
+                    btn.setBackground(Color.ORANGE);
+                    continue;
+                }
+
+                if (special == SpecialBoxType.QUESTION) {
+                    cell.setContent("❓");
+                    btn.setIcon(null);
+                    btn.setText("❓");
+                    btn.setFont(new Font("Serif", Font.BOLD, 18));
+                    btn.setForeground(Color.RED);
+                    btn.setBackground(Color.YELLOW);
+                    continue;
+                }
+
+                int neighbours = cell.getSurroundingMines();
+                cell.setContent(Integer.toString(neighbours));
+
+                btn.setBackground(gui.CELL_REVEALED);
+
+                if (neighbours == 0) {
+                    btn.setText("·");
+                    btn.setForeground(new Color(160, 170, 200, 100));
+                    btn.setFont(new Font("Arial", Font.BOLD, 24));
+
+                    findZeroes(tempX, tempY, board, buttons);
+
+                } else {
+                    btn.setText(Integer.toString(neighbours));
+                    gui.setTextColor(btn);
+                }
+            }
+        }
+    }
+
 	
 	private void showAll() { //Reveals all mines on both boards at game end
 		gui.revealAllMines(boardA, gui.getButtonsA());
