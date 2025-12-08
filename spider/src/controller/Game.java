@@ -40,6 +40,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	private SysData sysData;
 
 	private Difficulty currentDifficulty;
+	private final Random rng = new Random();
 	
 	
 	public Game(Difficulty difficulty, String player1Name, String player2Name) {// Sets up a new game: loads scores and questions, creates players and boards, initializes the GUI and game state.
@@ -264,27 +265,112 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		gui.updateStatus(sharedScore, sharedLives);
 	}
 	
-	private void handleSurpriseBox(int x, int y, Board board, JButton button) { //Randomly gives bonus/penalty feedback when stepping on a surprise box.
+	private void handleSurpriseBox(int x, int y, Board board, JButton button) {
+        Cell cell = board.getCells()[x][y];
+        String content = cell.getContent();
 
-		Random rand = new Random();
-		boolean isBonus = rand.nextBoolean();
+        // FIRST CLICK – reveal, +1 point (like empty)
+        if (content.equals("")) {
+            button.setBackground(Color.ORANGE);
+            button.setIcon(null);
+            button.setText("🎁");
+            button.setFont(new Font("Serif", Font.BOLD, 18));
+            button.setForeground(Color.RED);
 
-		if (isBonus) {
-			button.setBackground(Color.green);
-		} else {
-			button.setBackground(Color.orange);
-		}
+            cell.setContent("🎁");
 
-		button.setIcon(null);
-		button.setText("S");
-		button.setFont(new Font("Serif", Font.BOLD, 18));
-		button.setForeground(Color.RED);
+            sharedScore += 1;
+            gui.updateStatus(sharedScore, sharedLives);
+            return;
+        }
 
-		board.getCells()[x][y].setContent("S");
+        if (content.equals("USED")) {
+            return;
+        }
 
-		
-		gui.showSurpriseDialog(isBonus);
-	}
+        // SECOND CLICK – activation with cost and good/bad effect
+        if (content.equals("🎁")) {
+            int choice = JOptionPane.showConfirmDialog(
+                    gui,
+                    "Do you want to activate the surprise box?\n" +
+                    "(Activation will cost " + getActivationCost() + " points.)",
+                    "Activate Surprise?",
+                    JOptionPane.YES_NO_OPTION
+            );
+
+            if (choice != JOptionPane.YES_OPTION) {
+                return;
+            }
+
+            int activationCost = getActivationCost();
+            int surprisePts    = getSurprisePoints();
+
+            boolean isBonus = rng.nextBoolean();
+
+            int deltaPts  = -activationCost;
+            int deltaLives = 0;
+
+            if (isBonus) {
+                deltaPts  += surprisePts; // +8 / +12 / +16
+                deltaLives = +1;
+                button.setBackground(Color.GREEN);
+            } else {
+                deltaPts  -= surprisePts; // -8 / -12 / -16
+                deltaLives = -1;
+                button.setBackground(Color.RED);
+            }
+
+            sharedScore += deltaPts;
+            sharedLives += deltaLives;
+            clampLives();
+
+            button.setIcon(null);
+            button.setText("USED");
+            button.setFont(new Font("Serif", Font.BOLD, 16));
+            button.setForeground(Color.LIGHT_GRAY);
+
+            cell.setContent("USED");
+            cell.setSpecialBox(SpecialBoxType.NONE);
+
+            gui.updateStatus(sharedScore, sharedLives);
+
+            // MESSAGE – what happened
+            StringBuilder msg = new StringBuilder();
+            msg.append("Surprise box result:\n\n");
+            msg.append("Activation cost: -").append(activationCost).append(" pts\n");
+            int effectPts = deltaPts + activationCost; // רק האפקט (לא העלות)
+            msg.append("Surprise effect points: ")
+               .append(effectPts >= 0 ? "+" : "")
+               .append(effectPts)
+               .append(" pts");
+
+            if (deltaLives != 0) {
+                msg.append("\nLife change: ")
+                   .append(deltaLives > 0 ? "+" : "")
+                   .append(deltaLives)
+                   .append(" ♥");
+            }
+
+            msg.append("\n\nTotal points change: ")
+               .append(deltaPts >= 0 ? "+" : "")
+               .append(deltaPts)
+               .append(" pts");
+
+            msg.append("\nTotal score: ").append(sharedScore)
+               .append("\nTotal lives: ").append(sharedLives);
+
+            JOptionPane.showMessageDialog(
+                    gui,
+                    msg.toString(),
+                    "Surprise Box",
+                    JOptionPane.INFORMATION_MESSAGE
+            );
+
+            if (sharedLives <= 0) {
+                gameLost();
+            }
+        }
+    }
 
 	private void handleQuestionBox(int x, int y, Board board, JButton button) { //Shows a quiz question and applies feedback for correct/incorrect answers.
 
