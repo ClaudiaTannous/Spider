@@ -65,10 +65,10 @@ public class PlayerSetupView extends JFrame {
     private void loadBackgroundImage() {
         try {
             backgroundImage = new ImageIcon(
-                    getClass().getResource("/resources/setUpBackground.png")
+                    getClass().getResource("/resources/setupBackground.png")
             ).getImage();
         } catch (Exception e) {
-            System.out.println("Warning: Could not load /resources/setUpBackground.png");
+            System.out.println("Warning: Could not load /resources/setupBackground.png");
             backgroundImage = null;
         }
     }
