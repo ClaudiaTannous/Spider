@@ -240,19 +240,18 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 	
 
-	private void checkGame() { //Checks if either board is fully cleared or lives reach zero, then decides win or loss.
+	 private void checkGame() {
+	        boolean aDone = checkWinCondition(boardA);
+	        boolean bDone = checkWinCondition(boardB);
 
-		boolean aDone = checkWinCondition(boardA);
-		boolean bDone = checkWinCondition(boardB);
-
-		if (aDone || bDone || sharedLives <= 0) {
-			if (sharedLives > 0) {
-				gameWon();
-			} else {
-				gameLost();
-			}
-		}
-	}
+	        if (aDone || bDone || sharedLives <= 0) {
+	            if (sharedLives > 0) {
+	                gameWon();
+	            } else {
+	                gameLost();
+	            }
+	        }
+	    }
 
 	
 	 private boolean checkWinCondition(Board board) {
