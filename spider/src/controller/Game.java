@@ -223,20 +223,23 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		score.save();
 	}
 
-	public void gameLost() { //Updates losing streak and games count, logs a LOST result, shows game-over dialog, and saves the score.
-		score.incCurrentLosingStreak();
-		score.incGamesPlayed();
+	 public void gameLost() {
+	        // אם במקרה נשארו חיים (לא סביר אצלך, אבל לפי ההגדרה זה נכון)
+	        convertRemainingLivesToPoints();
 
-		gui.interruptTimer();
-		endGame();
+	        score.incCurrentLosingStreak();
+	        score.incGamesPlayed();
 
-		sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "LOST",
-				gui.getTimePassed());
+	        gui.interruptTimer();
+	        endGame();
 
-		gui.showGameOverDialog(sharedScore);
+	        sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "LOST",
+	                gui.getTimePassed());
 
-		score.save();
-	}
+	        gui.showGameOverDialog(sharedScore);
+
+	        score.save();
+	    }
 
 	
 
