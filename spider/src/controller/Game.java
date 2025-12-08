@@ -81,6 +81,18 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	    private int getActivationCost() {
 	        return getActivationCost(currentDifficulty);
 	    }
+	    // points used by surprise good/bad effect (±8 / ±12 / ±16)
+	    private int getSurprisePoints(Difficulty diff) {
+	        return switch (diff) {
+	            case EASY   -> 8;
+	            case MEDIUM -> 12;
+	            case HARD   -> 16;
+	        };
+	    }
+
+	    private int getSurprisePoints() {
+	        return getSurprisePoints(currentDifficulty);
+	    }
 
 	private void initializePlayers(String name1, String name2) {  //Ensures valid player names, creates the Player objects, initializes shared lives/score, and constructs the MineSweeper GUI.
 		if (name1 == null || name1.trim().isEmpty())
