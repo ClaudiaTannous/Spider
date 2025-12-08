@@ -17,6 +17,7 @@ import model.Cell;
 import model.Difficulty;
 import model.Player;
 import model.Question;
+import model.QuestionDifficulty;
 import model.Score;
 import model.SpecialBoxType;
 import view.MineSweeper;
@@ -578,6 +579,10 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		}
 		return count;
 	}
+	
+	private int getMaxLives() {
+        return currentDifficulty.getLives();   // 10 / 8 / 6 from enum
+    }
 
 	private void updateMineCounters() { // Updates displayed mine counters for both boards.
 		int a = countRemainingMines(boardA);
