@@ -69,6 +69,18 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		gui.hideAll();
 
 	}
+	
+	 private int getActivationCost(Difficulty diff) {
+	        return switch (diff) {
+	            case EASY   -> 5;
+	            case MEDIUM -> 8;
+	            case HARD   -> 12;
+	        };
+	    }
+
+	    private int getActivationCost() {
+	        return getActivationCost(currentDifficulty);
+	    }
 
 	private void initializePlayers(String name1, String name2) {  //Ensures valid player names, creates the Player objects, initializes shared lives/score, and constructs the MineSweeper GUI.
 		if (name1 == null || name1.trim().isEmpty())
