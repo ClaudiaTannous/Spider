@@ -134,6 +134,39 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	    public boolean isFlagMode() {
 	        return flagMode;
 	    }
+	    
+	    private void handleFlagClick(int x, int y, Board board, JButton button) {
+	        Cell cell = board.getCells()[x][y];
+	        String content = cell.getContent();
+	        if (content == null) content = "";
+
+	    
+	        if ("F".equals(content)) {
+	            cell.setContent("");
+	            button.setText("");
+	            button.setIcon(null);
+	            button.setBorder(UIManager.getBorder("Button.border")); 
+	            gui.updateStatus(sharedScore, sharedLives);
+	            return;
+	        }
+
+	        // If the cell is already revealed (number, M, USED, etc.) → do nothing
+	        if (!content.equals("")) {
+	            return;
+	        }
+
+	        // Place a NEW flag – but no hint if correct or not
+	        cell.setContent("F");
+
+	        button.setIcon(null);
+	        button.setText("🚩");
+	        button.setFont(new Font("Segoe UI Emoji", Font.PLAIN, 18));
+	        button.setForeground(Color.RED);
+	        button.setBorder(UIManager.getBorder("Button.border")); // neutral border
+
+	        // no score change here!
+	        gui.updateStatus(sharedScore, sharedLives);
+	    }
 
 	public void newGame() { //Resets the game state (players, boards, lives, score, questions, timer) and restarts the GUI for a new match.
 		this.playing = false;
