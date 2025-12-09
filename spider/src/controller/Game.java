@@ -130,6 +130,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		gui.setMines(currentDifficulty.getMines());
 	}
 
+	// Enables or disables flag mode
 	public void setFlagMode(boolean flagMode) {
 		boolean wasFlagMode = this.flagMode;
 		this.flagMode = flagMode;
@@ -146,6 +147,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		return flagMode;
 	}
 
+	 // Handles placing/removing a flag on a given cell while in flag mode.
 	private void handleFlagClick(int x, int y, Board board, JButton button) {
 		Cell cell = board.getCells()[x][y];
 		String content = cell.getContent();
@@ -212,7 +214,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		score.save();
 	}
 
-	private void convertRemainingLivesToPoints() {
+	private void convertRemainingLivesToPoints() {  // Converts remaining lives into bonus points
 		if (sharedLives <= 0) {
 			return;
 		}
@@ -228,8 +230,9 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		}
 	}
 
+	// Handles a win: converts lives to points, updates status, logs and shows dialog.
 	public void gameWon() {
-		// קודם ממירים חיים לנקודות לפי הכלל החדש
+		// First convert remaining lives to points using the new rule
 		convertRemainingLivesToPoints();
 
 		score.incCurrentStreak();
@@ -250,7 +253,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	}
 
 	public void gameLost() {
-		// אם במקרה נשארו חיים (לא סביר אצלך, אבל לפי ההגדרה זה נכון)
+		// Convert lives to points if any remain (even if unlikely)
 		convertRemainingLivesToPoints();
 
 		score.incCurrentLosingStreak();
@@ -267,6 +270,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		score.save();
 	}
 
+	 // Checks win/lose conditions and calls gameWon/gameLost accordingly.
 	private void checkGame() {
 		boolean aDone = checkWinCondition(boardA);
 		boolean bDone = checkWinCondition(boardB);
@@ -280,6 +284,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		}
 	}
 
+	// Returns true if all mines on a board are either flagged or revealed.
 	private boolean checkWinCondition(Board board) {
 		Cell[][] cells = board.getCells();
 
@@ -304,6 +309,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		return true;
 	}
 
+	 // Recursively reveals empty neighbors around a zero cell (including specials:questions\surprises).
 	private void findZeroes(int x, int y, Board board, JButton[][] buttons) {
 
 		Cell[][] cells = board.getCells();
@@ -368,6 +374,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		}
 	}
 
+	  // Reveals all cells on both boards using GUI helper methods.
 	 private void showAll() {
 	        gui.revealAllBoard(boardA, gui.getButtonsA());
 	        gui.revealAllBoard(boardB, gui.getButtonsB());
@@ -380,7 +387,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		gui.updateStatus(sharedScore, sharedLives);
 	}
 
-	private void handleSurpriseBox(int x, int y, Board board, JButton button) {
+	private void handleSurpriseBox(int x, int y, Board board, JButton button) {  // Handles clicks on a surprise box and applies random effect.
 		Cell cell = board.getCells()[x][y];
 		String content = cell.getContent();
 
@@ -470,7 +477,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		}
 	}
 
-	private void handleQuestionBox(int x, int y, Board board, JButton button) {
+	private void handleQuestionBox(int x, int y, Board board, JButton button) {  // Handles clicks on a question box and applies question outcome.
 		Cell cell = board.getCells()[x][y];
 		String content = cell.getContent();
 
@@ -487,7 +494,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 			sharedScore += 1;
 			gui.updateStatus(sharedScore, sharedLives);
 
-			// 🔥 NEW: expand empty neighbors like normal empty cell
+			//expand empty neighbors like normal empty cell
 			findZeroes(x, y, board, (board == boardA ? gui.getButtonsA() : gui.getButtonsB()));
 
 			return;
@@ -536,7 +543,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 			cell.setContent("USED");
 			cell.setSpecialBox(SpecialBoxType.NONE);
 
-			// טבלת הניקוד (כולל עלות ההפעלה החדשה)
+			// Apply scoring & lives
 			applyQuestionOutcome(currentDifficulty, q.getDifficulty(), correct, board);
 		}
 	}
@@ -630,7 +637,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 	}
 
-	private void evaluateFlags() {
+	private void evaluateFlags() { // Evaluates flags on both boards and updates score and status.
 		if (boardA != null && gui != null) {
 			evaluateFlagsOnBoard(boardA, gui.getButtonsA());
 		}
@@ -641,7 +648,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		gui.updateStatus(sharedScore, sharedLives);
 	}
 
-	private void evaluateFlagsOnBoard(Board board, JButton[][] buttons) {
+	private void evaluateFlagsOnBoard(Board board, JButton[][] buttons) {  // Evaluates all flags on a single board and marks correct/incorrect flags.
 		Cell[][] cells = board.getCells();
 
 		for (int x = 0; x < board.getCols(); x++) {
@@ -649,38 +656,35 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 				Cell cell = cells[x][y];
 				JButton button = buttons[x][y];
 
-				// רק משבצות שעדיין מסומנות בדגל
+				 // Only cells that are still flagged
 				if (!"F".equals(cell.getContent())) {
 					continue;
 				}
 
-				// אם כבר הערכנו את הדגל הזה (יש LineBorder) – לא מחשבים שוב
+				// Skip flags already evaluated (have LineBorder)
 				if (button.getBorder() instanceof LineBorder) {
 					continue;
 				}
 
 				if (cell.getMine()) {
-					// ❇ דגל נכון על מוקש:
-					// +1 נקודה וחושפים את המוקש
+					 // Correct flag on a mine (+1 and reveal)
 					sharedScore += 1;
 
-					cell.setContent("M"); // עכשיו זה מוקש גלוי
-					button.setIcon(gui.getIconMine()); // אייקון המוקש הרגיל
-					button.setText(""); // לא צריך "F" יותר
-					button.setBackground(Color.DARK_GRAY); // או כל צבע שאתה אוהב
+					cell.setContent("M");  
+					button.setIcon(gui.getIconMine()); 
+					button.setText("");  
+					button.setBackground(Color.DARK_GRAY); 
 					button.setBorder(new LineBorder(Color.GREEN, 2, true));
 				} else {
-					// ❌ דגל שגוי (על ריקה / מספר / הפתעה / שאלה): -3 נק'
+					// Wrong flag on non-mine (-3, red border)
 					sharedScore -= 3;
 					button.setBorder(new LineBorder(Color.RED, 2, true));
-					// כאן במפורש *לא* חושפים את המשבצת – רק מסמנים שהדגל היה שגוי
-					// (החוקים שלך לא דורשים לחשוף במקרה הזה)
 				}
 			}
 		}
 	}
 
-	public void mouseClicked(MouseEvent e) {
+	public void mouseClicked(MouseEvent e) {  // Handles all mouse clicks on cells (flags, specials, mines, normal cells).
 
 		if (!playing) {
 			gui.startTimer();
@@ -800,16 +804,17 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		checkGame();
 	}
 
+	 // Applies question outcome (points, lives, reveals) based on difficulty and answer.
 	private void applyQuestionOutcome(Difficulty gameDiff, QuestionDifficulty qDiff, boolean correct, Board board) {
 
 		int activationCost = getActivationCost(gameDiff);
 
-		int deltaPts = -activationCost; // משלמים עלות הפעלה
+		int deltaPts = -activationCost; // pay activation cost
 		int deltaLives = 0;
 		boolean revealMine = false;
 		boolean reveal3x3 = false;
 
-		boolean pickFirst = rng.nextBoolean(); // ל־OR בטבלה
+		boolean pickFirst = rng.nextBoolean(); // for OR cases in table
 
 // EASY game
 		if (gameDiff == Difficulty.EASY) {
@@ -950,7 +955,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 		gui.updateStatus(sharedScore, sharedLives);
 
-// הודעת סיכום לשאלה
+		 // Summary message for question result
 		StringBuilder msg = new StringBuilder();
 		msg.append("Question result (").append(gameDiff.name()).append(" game, ").append(qDiff.name())
 				.append(" question)\n\n");
@@ -959,7 +964,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 		msg.append("Activation cost: -").append(activationCost).append(" pts\n");
 
-		int effectPts = deltaPts + activationCost; // רק האפקט מעבר לעלות
+		int effectPts = deltaPts + activationCost; // pure effect beyond activation cost
 		msg.append("Question effect points: ").append(effectPts >= 0 ? "+" : "").append(effectPts).append(" pts");
 
 		if (deltaLives != 0) {
@@ -983,7 +988,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 			gameLost();
 		}
 	}
-	 private void clampLives() {
+	 private void clampLives() { // Clamps lives between 0 and max and converts extra lives to points.
 	        int max = getMaxLives();
 
 	        if (sharedLives > max) {
@@ -1003,7 +1008,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	        }
 	    }
 	 
-	  private void revealRandomMine(Board board) {
+	  private void revealRandomMine(Board board) { // Reveals one hidden mine on the given board (first one found).
 	        Cell[][] c = board.getCells();
 	        JButton[][] btns = (board == boardA) ? gui.getButtonsA() : gui.getButtonsB();
 
@@ -1021,7 +1026,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	        }
 	    }
 	  
-	  private void revealRandom3x3(Board board) {
+	  private void revealRandom3x3(Board board) { // Reveals a random 3×3 area on the given board (mines or numbers)
 	        int centerX = rng.nextInt(board.getCols());
 	        int centerY = rng.nextInt(board.getRows());
 
