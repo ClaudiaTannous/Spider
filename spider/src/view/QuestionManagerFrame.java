@@ -35,22 +35,32 @@ public class QuestionManagerFrame extends JFrame {
     private List<Question> currentQuestions = new ArrayList<>();
     private int selectedIndex = -1;
 
-    // Colors (same palette as before)
+    // Colors
     private static final Color BG_MAIN    = new Color(0x08, 0x13, 0x1E);
-    private static final Color CARD_BG    = new Color(0x0D, 0x2A, 0x38);
-    private static final Color HEADER_BG  = new Color(0x36, 0x53, 0x69);
     private static final Color TEXT_MAIN  = new Color(230, 242, 255);
     private static final Color TEXT_MUTED = new Color(170, 185, 195);
 
-    // Buttons based on palette
-    private static final Color BTN_NEW_BG    = new Color(0xFF, 0xCF, 0x4A); 
-    private static final Color BTN_EDIT_BG   = new Color(0x36, 0x53, 0x69); 
-    private static final Color BTN_DELETE_BG = new Color(0xFF, 0x52, 0x62); 
-    private static final Color BTN_CLOSE_BG  = new Color(0x2B, 0x45, 0x53); 
+    // Buttons palette
+    private static final Color BTN_NEW_BG    = new Color(0xFF, 0xCF, 0x4A);
+    private static final Color BTN_EDIT_BG   = new Color(0x36, 0x53, 0x69);
+    private static final Color BTN_DELETE_BG = new Color(0xFF, 0x52, 0x62);
+    private static final Color BTN_CLOSE_BG  = new Color(0x2B, 0x45, 0x53);
+
+    // Background image
+    private Image bgImage;
 
     public QuestionManagerFrame(SysData sysData) {
         super("Question Bank");
         this.sysData = sysData;
+
+        try {
+            bgImage = new ImageIcon(
+                    getClass().getResource("/resources/questionsBackground.jpg")
+            ).getImage();
+        } catch (Exception e) {
+            System.out.println("Warning: Could not load /resources/questionsBackground.jpg");
+            bgImage = null;
+        }
 
         initComponents();
         buildLayout();
@@ -80,7 +90,7 @@ public class QuestionManagerFrame extends JFrame {
         styleGhostButton(btnReload);
         styleSecondaryButton(btnClose);
 
-        // Make side buttons same size
+        // Make side buttons the same size
         JButton[] sideButtons = { btnNew, btnDelete, btnEdit, btnClose };
         Dimension maxSize = new Dimension(0, 0);
 
@@ -98,10 +108,9 @@ public class QuestionManagerFrame extends JFrame {
             b.setMaximumSize(maxSize);
         }
 
-        // Cards container for questions
-        cardsContainer = new JPanel();
+        // Cards container for questions (2 columns via GridBagLayout)
+        cardsContainer = new JPanel(new GridBagLayout());
         cardsContainer.setOpaque(false);
-        cardsContainer.setLayout(new BoxLayout(cardsContainer, BoxLayout.Y_AXIS));
         cardsContainer.setBorder(new EmptyBorder(8, 8, 8, 8));
 
         lblSubtitle = new JLabel("");
@@ -113,18 +122,28 @@ public class QuestionManagerFrame extends JFrame {
     // Layout
     // ----------------------------------------------------
     private void buildLayout() {
+        // Root panel with background image
         JPanel root = new JPanel(new BorderLayout(12, 12)) {
             @Override
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
-                g2.setPaint(new GradientPaint(
-                        0, 0, BG_MAIN,
-                        getWidth(), getHeight(), new Color(0x08, 0x13, 0x1E)));
-                g2.fillRect(0, 0, getWidth(), getHeight());
+                g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                        RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+
+                if (bgImage != null) {
+                    g2.drawImage(bgImage, 0, 0, getWidth(), getHeight(), null);
+                } else {
+                    g2.setPaint(new GradientPaint(
+                            0, 0, BG_MAIN,
+                            getWidth(), getHeight(), BG_MAIN.darker()
+                    ));
+                    g2.fillRect(0, 0, getWidth(), getHeight());
+                }
                 g2.dispose();
             }
         };
+        root.setOpaque(false);
         root.setBorder(BorderFactory.createEmptyBorder(14, 14, 14, 14));
         setContentPane(root);
 
@@ -144,26 +163,63 @@ public class QuestionManagerFrame extends JFrame {
         titlePanel.add(titleLeft, BorderLayout.WEST);
         titlePanel.add(btnReload, BorderLayout.EAST);
 
-        // Card panel background
-        JPanel cardWrapper = new JPanel(new BorderLayout());
-        cardWrapper.setBackground(CARD_BG);
-        cardWrapper.setBorder(BorderFactory.createCompoundBorder(
-                new LineBorder(HEADER_BG, 2, true),
-                new EmptyBorder(10, 10, 10, 10)
-        ));
+        // Frosted glass wrapper for cards
+        JPanel cardWrapper = new JPanel(new BorderLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
+
+                int arc = 28;
+                int w = getWidth();
+                int h = getHeight();
+
+                // Base glass tint
+                Color base = new Color(5, 20, 40, 200);
+                g2.setColor(base);
+                g2.fillRoundRect(0, 0, w, h, arc, arc);
+
+                // Vertical highlight for glass effect
+                GradientPaint gp = new GradientPaint(
+                        0, 0, new Color(255, 255, 255, 70),
+                        0, h, new Color(255, 255, 255, 15)
+                );
+                g2.setPaint(gp);
+                g2.fillRoundRect(0, 0, w, h, arc, arc);
+
+                // Outer soft border
+                g2.setColor(new Color(255, 255, 255, 60));
+                g2.drawRoundRect(0, 0, w - 1, h - 1, arc, arc);
+
+                // Inner bright border
+                g2.setColor(new Color(255, 255, 255, 200));
+                g2.setStroke(new BasicStroke(2f));
+                g2.drawRoundRect(2, 2, w - 5, h - 5, arc - 4, arc - 4);
+
+                g2.dispose();
+                super.paintComponent(g);
+            }
+        };
+        cardWrapper.setOpaque(false);
+        cardWrapper.setBorder(new EmptyBorder(12, 12, 12, 12));
 
         JScrollPane scrollPane = new JScrollPane(cardsContainer);
-        scrollPane.getViewport().setBackground(CARD_BG);
+        scrollPane.getViewport().setOpaque(false);
+        scrollPane.setOpaque(false);
         scrollPane.setBorder(BorderFactory.createEmptyBorder());
         scrollPane.setHorizontalScrollBarPolicy(ScrollPaneConstants.HORIZONTAL_SCROLLBAR_NEVER);
 
         cardWrapper.add(scrollPane, BorderLayout.CENTER);
 
-        // Side buttons
+        // Side buttons panel (stick to bottom)
         JPanel buttonsPanel = new JPanel();
         buttonsPanel.setOpaque(false);
         buttonsPanel.setLayout(new BoxLayout(buttonsPanel, BoxLayout.Y_AXIS));
         buttonsPanel.setBorder(new EmptyBorder(20, 10, 20, 0));
+
+        // Glue pushes all buttons to bottom
+        buttonsPanel.add(Box.createVerticalGlue());
 
         buttonsPanel.add(btnNew);
         buttonsPanel.add(Box.createVerticalStrut(12));
@@ -256,17 +312,38 @@ public class QuestionManagerFrame extends JFrame {
     }
 
     // ----------------------------------------------------
-    // Cards UI
+    // Cards UI (2 columns)
     // ----------------------------------------------------
     private void rebuildCardsUI() {
         cardsContainer.removeAll();
 
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.insets = new Insets(10, 10, 10, 10);
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.weightx = 0.5;
+        gbc.weighty = 0.0;
+
         for (int i = 0; i < currentQuestions.size(); i++) {
             Question q = currentQuestions.get(i);
             JPanel card = createQuestionCard(q, i);
-            cardsContainer.add(card);
-            cardsContainer.add(Box.createVerticalStrut(10));
+
+            int row = i / 2;
+            int col = i % 2;
+
+            gbc.gridx = col;
+            gbc.gridy = row;
+
+            cardsContainer.add(card, gbc);
         }
+
+        // Spacer row to push cards to the top
+        gbc.gridx = 0;
+        gbc.gridy = currentQuestions.size() / 2 + 1;
+        gbc.gridwidth = 2;
+        gbc.weighty = 1.0;
+        JPanel spacer = new JPanel();
+        spacer.setOpaque(false);
+        cardsContainer.add(spacer, gbc);
 
         cardsContainer.revalidate();
         cardsContainer.repaint();
@@ -281,7 +358,8 @@ public class QuestionManagerFrame extends JFrame {
             @Override
             protected void paintComponent(Graphics g) {
                 Graphics2D g2 = (Graphics2D) g.create();
-                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
 
                 boolean isSelected = (index == selectedIndex);
 
@@ -331,7 +409,7 @@ public class QuestionManagerFrame extends JFrame {
         }});
         metaPanel.add(diffLabel);
 
-        // Question text as wrapped JTextArea
+        // Question text
         JTextArea questionArea = new JTextArea(text);
         questionArea.setEditable(false);
         questionArea.setLineWrap(true);

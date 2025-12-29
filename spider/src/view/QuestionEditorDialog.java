@@ -33,11 +33,10 @@ public class QuestionEditorDialog extends JDialog {
 
     // --- Color palette from "Modern Dark Mode Pale" ---
     private static final Color BG_MAIN         = new Color(0x08, 0x13, 0x1E); // Background
-    private static final Color CARD_BG         = new Color(0x0D, 0x2A, 0x38); // Board
+    private static final Color CARD_BG         = new Color(0x0D, 0x2A, 0x38); // base glass tint
     private static final Color ROW_ODD         = new Color(0x1F, 0x33, 0x40); // Hidden Cell
     private static final Color ROW_EVEN        = new Color(0x2B, 0x45, 0x53); // Revealed Cell
     private static final Color HEADER_BG       = new Color(0x36, 0x53, 0x69); // Hover
-    private static final Color HEADER_FG       = new Color(236, 240, 241);
     private static final Color TEXT_MAIN       = new Color(230, 242, 255);
     private static final Color TEXT_MUTED      = new Color(170, 185, 195);
 
@@ -45,6 +44,9 @@ public class QuestionEditorDialog extends JDialog {
     private static final Color BTN_SAVE_BG     = new Color(0xFF, 0xCF, 0x4A); // Flag
     private static final Color BTN_DELETE_BG   = new Color(0xFF, 0x52, 0x62); // Mine
     private static final Color BTN_CANCEL_BG   = new Color(0x2B, 0x45, 0x53); // Revealed Cell
+
+    // Background image
+    private Image backgroundImage;
 
     public QuestionEditorDialog(Frame owner, SysData sysData, Question questionOrNull) {
         super(owner, true);
@@ -54,6 +56,7 @@ public class QuestionEditorDialog extends JDialog {
         setTitle(questionOrNull == null ? "New Question"
                                         : "Edit Question " + questionOrNull.getId());
 
+        loadBackgroundImage();
         initComponents();
         buildLayout();
         attachListeners();
@@ -66,6 +69,17 @@ public class QuestionEditorDialog extends JDialog {
 
         setSize(720, 560);
         setLocationRelativeTo(owner);
+    }
+
+    //  Load background image from resources
+    private void loadBackgroundImage() {
+        try {
+            backgroundImage = new ImageIcon(
+                    getClass().getResource("/resources/questionsBackground.jpg")
+            ).getImage();
+        } catch (Exception e) {
+            backgroundImage = null;
+        }
     }
 
     // ----------------------------------------------------
@@ -87,7 +101,6 @@ public class QuestionEditorDialog extends JDialog {
         correctGroup = new ButtonGroup();
 
         for (int i = 0; i < 4; i++) {
-         
             txtAnswers[i] = new JTextArea(3, 30);
             styleTextArea(txtAnswers[i]);
 
@@ -108,7 +121,6 @@ public class QuestionEditorDialog extends JDialog {
         btnDelete = new JButton("Delete");
         btnCancel = new JButton("Cancel");
 
-      
         stylePrimaryButton(btnSave, BTN_SAVE_BG);
         styleDangerButton(btnDelete, BTN_DELETE_BG);
         styleSecondaryButton(btnCancel, BTN_CANCEL_BG);
@@ -127,10 +139,19 @@ public class QuestionEditorDialog extends JDialog {
             protected void paintComponent(Graphics g) {
                 super.paintComponent(g);
                 Graphics2D g2 = (Graphics2D) g.create();
-                g2.setPaint(new GradientPaint(
-                        0, 0, BG_MAIN,
-                        getWidth(), getHeight(), BG_MAIN.darker()));
-                g2.fillRect(0, 0, getWidth(), getHeight());
+
+                if (backgroundImage != null) {
+                    g2.setRenderingHint(RenderingHints.KEY_INTERPOLATION,
+                            RenderingHints.VALUE_INTERPOLATION_BILINEAR);
+                    g2.drawImage(backgroundImage, 0, 0,
+                            getWidth(), getHeight(), null);
+                } else {
+                    g2.setPaint(new GradientPaint(
+                            0, 0, BG_MAIN,
+                            getWidth(), getHeight(), BG_MAIN.darker()));
+                    g2.fillRect(0, 0, getWidth(), getHeight());
+                }
+
                 g2.dispose();
             }
         };
@@ -155,13 +176,36 @@ public class QuestionEditorDialog extends JDialog {
 
         root.add(titlePanel, BorderLayout.NORTH);
 
-        // Card with form
-        JPanel cardPanel = new JPanel(new GridBagLayout());
-        cardPanel.setBackground(CARD_BG);
-        cardPanel.setBorder(new CompoundBorder(
-                new LineBorder(HEADER_BG, 2, true),
-                new EmptyBorder(12, 12, 12, 12)
-        ));
+        // Card with glass effect
+        JPanel cardPanel = new JPanel(new GridBagLayout()) {
+            @Override
+            protected void paintComponent(Graphics g) {
+                Graphics2D g2 = (Graphics2D) g.create();
+                g2.setRenderingHint(RenderingHints.KEY_ANTIALIASING,
+                        RenderingHints.VALUE_ANTIALIAS_ON);
+
+                int arc = 24;
+                int w = getWidth();
+                int h = getHeight();
+
+                  
+                g2.setColor(new Color(
+                        CARD_BG.getRed(),
+                        CARD_BG.getGreen(),
+                        CARD_BG.getBlue(),
+                        170)); //  170/255
+                g2.fillRoundRect(0, 0, w, h, arc, arc);
+
+                g2.setColor(new Color(255, 255, 255, 80));
+                g2.setStroke(new BasicStroke(2f));
+                g2.drawRoundRect(1, 1, w - 3, h - 3, arc - 4, arc - 4);
+
+                g2.dispose();
+                super.paintChildren(g);
+            }
+        };
+        cardPanel.setOpaque(false);
+        cardPanel.setBorder(new EmptyBorder(12, 12, 12, 12));
 
         int row = 0;
 
@@ -266,7 +310,7 @@ public class QuestionEditorDialog extends JDialog {
             gbcAnsScroll.gridwidth = 2;
             gbcAnsScroll.fill = GridBagConstraints.BOTH;
             gbcAnsScroll.weightx = 1.0;
-            gbcAnsScroll.weighty = 0.18;    
+            gbcAnsScroll.weighty = 0.18;
             cardPanel.add(ansScroll, gbcAnsScroll);
 
             GridBagConstraints gbcAnsRadio = new GridBagConstraints();
@@ -361,12 +405,14 @@ public class QuestionEditorDialog extends JDialog {
     }
 
     private Question buildQuestionFromForm() {
+        // ---------- ID ----------
         String id = txtId.getText().trim();
         if (id.isEmpty()) {
             id = sysData.generateNewQuestionId();
             txtId.setText(id);
         }
 
+        // ---------- Question text ----------
         String text = txtQuestion.getText().trim();
         if (text.isEmpty()) {
             JOptionPane.showMessageDialog(this,
@@ -375,6 +421,7 @@ public class QuestionEditorDialog extends JDialog {
             return null;
         }
 
+        // ---------- Answers ----------
         List<String> answers = new ArrayList<>();
         for (int i = 0; i < 4; i++) {
             answers.add(txtAnswers[i].getText().trim());
@@ -387,6 +434,7 @@ public class QuestionEditorDialog extends JDialog {
             return null;
         }
 
+        // ---------- Correct answer selected ----------
         if (correctGroup.getSelection() == null) {
             JOptionPane.showMessageDialog(this,
                     "Select the correct answer.",
@@ -394,6 +442,71 @@ public class QuestionEditorDialog extends JDialog {
             return null;
         }
 
+        // ---------- Duplicate answers check (ignore whitespace + case) ----------
+        List<String> normalizedAnswers = answers.stream()
+                .map(this::normalizeText)
+                .toList();
+
+        if (normalizedAnswers.stream().distinct().count() != 4) {
+
+            StringBuilder duplicatesMsg = new StringBuilder();
+            duplicatesMsg.append("Some answers are identical, the answers should be diffrent:\n\n");
+
+            for (int i = 0; i < answers.size(); i++) {
+                for (int j = i + 1; j < answers.size(); j++) {
+                    if (normalizedAnswers.get(i).equals(normalizedAnswers.get(j))) {
+                        duplicatesMsg.append("• Answer ")
+                                .append(i + 1)
+                                .append(" and Answer ")
+                                .append(j + 1)
+                                .append(":\n")
+                                .append("\"")
+                                .append(answers.get(i))
+                                .append("\"\n\n");
+                    }
+                }
+            }
+
+            JOptionPane.showMessageDialog(this,
+                    duplicatesMsg.toString(),
+                    "Validation",
+                    JOptionPane.WARNING_MESSAGE);
+
+            return null;
+        }
+
+        // ---------- Duplicate question check in bank ----------
+        // Check duplicates by ID and by question text (normalized).
+        String normText = normalizeText(text);
+
+        for (Question existing : sysData.findAllQuestions()) {
+            if (existing == null) continue;
+
+            boolean sameId = existing.getId() != null && existing.getId().trim().equalsIgnoreCase(id);
+
+            String existingText = (existing.getText() == null) ? "" : existing.getText();
+            boolean sameText = normalizeText(existingText).equals(normText);
+
+            // If editing: allow saving the same question itself (same ID)
+            boolean isEditingSame = (originalQuestion != null
+                    && originalQuestion.getId() != null
+                    && originalQuestion.getId().trim().equalsIgnoreCase(existing.getId()));
+
+            if (!isEditingSame && (sameId || sameText)) {
+                String message = sameId
+                        ? "A question with this ID already exists."
+                        : "This question already exists in the question bank.";
+
+                JOptionPane.showMessageDialog(this,
+                        message,
+                        "Validation",
+                        JOptionPane.WARNING_MESSAGE);
+
+                return null;
+            }
+        }
+
+        // ---------- Build Question ----------
         int correctIndex = Integer.parseInt(correctGroup.getSelection().getActionCommand());
         QuestionDifficulty difficulty = (QuestionDifficulty) cbDifficulty.getSelectedItem();
 
@@ -405,6 +518,21 @@ public class QuestionEditorDialog extends JDialog {
                 difficulty
         );
     }
+
+    /**
+     * Normalize text for comparison:
+     * - trim
+     * - lowercase
+     * - remove ALL whitespace (spaces, tabs, newlines)
+     */
+    private String normalizeText(String s) {
+        if (s == null) return "";
+        return s.trim()
+                .toLowerCase()
+                .replaceAll("\\s+", "");
+    }
+
+
 
     // ----------------------------------------------------
     // Styling helpers
@@ -434,7 +562,7 @@ public class QuestionEditorDialog extends JDialog {
 
     private void styleDangerButton(JButton btn, Color bg) {
         btn.setBackground(bg);
-        btn.setForeground(Color.WHITE);
+        btn.setForeground(new Color(0, 0, 0));
         btn.setFocusPainted(false);
         btn.setBorder(new CompoundBorder(
                 new LineBorder(bg.darker(), 1, true),
