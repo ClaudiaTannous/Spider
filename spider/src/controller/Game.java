@@ -52,7 +52,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		score = new Score();
 		score.populate();
 
-		MineSweeper.setLook("Nimbus");
+		
 
 		this.currentDifficulty = difficulty;
 		this.sysData = new SysData();
@@ -272,6 +272,8 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 	 // Checks win/lose conditions and calls gameWon/gameLost accordingly.
 	private void checkGame() {
+	    if (!playing) return;   // if the game is no longer active, skip further win/lose checks
+	                           // This prevents multiple end-game dialogs from being shown
 		boolean aDone = checkWinCondition(boardA);
 		boolean bDone = checkWinCondition(boardB);
 
@@ -339,8 +341,8 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 					btn.setIcon(null);
 					btn.setText("🎁");
 					btn.setFont(new Font("Serif", Font.BOLD, 18));
-					btn.setForeground(Color.RED);
-					btn.setBackground(Color.ORANGE);
+					btn.setForeground(new Color(30, 30, 30));
+					btn.setBackground(gui.S_HIGHLIGHT);
 					continue;
 				}
 
@@ -349,8 +351,8 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 					btn.setIcon(null);
 					btn.setText("❓");
 					btn.setFont(new Font("Serif", Font.BOLD, 18));
-					btn.setForeground(Color.RED);
-					btn.setBackground(Color.YELLOW);
+					btn.setForeground(new Color(30, 30, 30));
+					btn.setBackground(gui.Q_HIGHLIGHT);
 					continue;
 				}
 
@@ -393,11 +395,11 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 		// FIRST CLICK – reveal, +1 point (like empty)
 		if (content.equals("")) {
-			button.setBackground(Color.ORANGE);
+			button.setBackground(gui.S_HIGHLIGHT);
 			button.setIcon(null);
 			button.setText("🎁");
 			button.setFont(new Font("Serif", Font.BOLD, 18));
-			button.setForeground(Color.RED);
+			button.setForeground(new Color(30, 30, 30));
 
 			cell.setContent("🎁");
 
@@ -433,11 +435,11 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 			if (isBonus) {
 				deltaPts += surprisePts; // +8 / +12 / +16
 				deltaLives = +1;
-				button.setBackground(Color.GREEN);
+				button.setBackground(new Color(167, 214, 167)); 
 			} else {
 				deltaPts -= surprisePts; // -8 / -12 / -16
 				deltaLives = -1;
-				button.setBackground(Color.RED);
+				button.setBackground(new Color(167, 214, 167)); 
 			}
 
 			sharedScore += deltaPts;
@@ -447,7 +449,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 			button.setIcon(null);
 			button.setText("USED");
 			button.setFont(new Font("Serif", Font.BOLD, 16));
-			button.setForeground(Color.LIGHT_GRAY);
+			button.setForeground(Color.BLACK);
 
 			cell.setContent("USED");
 			cell.setSpecialBox(SpecialBoxType.NONE);
@@ -458,7 +460,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 			StringBuilder msg = new StringBuilder();
 			msg.append("Surprise box result:\n\n");
 			msg.append("Activation cost: -").append(activationCost).append(" pts\n");
-			int effectPts = deltaPts + activationCost; // רק האפקט (לא העלות)
+			int effectPts = deltaPts + activationCost; 
 			msg.append("Surprise effect points: ").append(effectPts >= 0 ? "+" : "").append(effectPts).append(" pts");
 
 			if (deltaLives != 0) {
@@ -483,11 +485,11 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 		if (content.equals("")) {
 			// Reveal question
-			button.setBackground(Color.YELLOW);
+			button.setBackground(gui.Q_HIGHLIGHT);
 			button.setIcon(null);
 			button.setText("❓");
 			button.setFont(new Font("Serif", Font.BOLD, 18));
-			button.setForeground(Color.RED);
+			button.setForeground(new Color(30, 30, 30));
 
 			cell.setContent("❓");
 
@@ -528,17 +530,17 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 			boolean correct = (selectedIndex == q.getCorrectIndex());
 
 			if (correct) {
-				button.setBackground(Color.GREEN);
+				button.setBackground(new Color(167, 214, 167));
 				gui.showCorrectAnswerDialog();
 			} else {
-				button.setBackground(Color.RED);
+				button.setBackground(new Color(167, 214, 167)); 
 				gui.showWrongAnswerDialog();
 			}
 
 			button.setIcon(null);
 			button.setText("USED");
 			button.setFont(new Font("Serif", Font.BOLD, 16));
-			button.setForeground(Color.LIGHT_GRAY);
+			button.setForeground(Color.BLACK);
 
 			cell.setContent("USED");
 			cell.setSpecialBox(SpecialBoxType.NONE);
@@ -556,7 +558,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		sharedLives -= 1;
 
 		button.setIcon(gui.getIconRedMine());
-		button.setBackground(Color.RED);
+		button.setBackground(new Color(183, 28, 28));
 		cell.setContent("M");
 
 		gui.showMineHitDialog();
@@ -588,8 +590,9 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	}
 	
 	private int getMaxLives() {
-        return currentDifficulty.getLives();   // 10 / 8 / 6 from enum
-    }
+	    return 10;
+	}
+
 
 	private void updateMineCounters() { // Updates displayed mine counters for both boards.
 		int a = countRemainingMines(boardA);
@@ -671,9 +674,9 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 					sharedScore += 1;
 
 					cell.setContent("M");  
-					button.setIcon(gui.getIconMine()); 
-					button.setText("");  
-					button.setBackground(Color.DARK_GRAY); 
+					button.setIcon(gui.getIconRedMine());
+					button.setText("");
+					button.setBackground(new Color(183, 28, 28));
 					button.setBorder(new LineBorder(Color.GREEN, 2, true));
 				} else {
 					// Wrong flag on non-mine (-3, red border)
@@ -735,12 +738,12 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		boolean isMine = cell.getMine();
 		int neighbours = cell.getSurroundingMines();
 
-		// ⭐ FIX: if this is a mine that is already revealed ("M"), ignore click
+		// if this is a mine that is already revealed ("M"), ignore click
 		if (isMine && "M".equals(content)) {
 			return;
 		}
 
-		// ⭐ FIX: only clear icon if this is NOT an already-revealed mine
+		// only clear icon if this is NOT an already-revealed mine
 		if (!"M".equals(content)) {
 			button.setIcon(null);
 		}
@@ -990,9 +993,6 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	}
 	 private void clampLives() { // Clamps lives between 0 and max and converts extra lives to points.
 	        int max = getMaxLives();
-	        if (sharedLives < 0) {
-	            sharedLives = 0;
-	        }
 
 	        if (sharedLives > max) {
 	            int extraLives = sharedLives - max;
@@ -1006,7 +1006,9 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 	        }
 
-	        
+	        if (sharedLives < 0) {
+	            sharedLives = 0;
+	        }
 	    }
 	 
 	  private void revealRandomMine(Board board) { // Reveals one hidden mine on the given board (first one found).
@@ -1019,49 +1021,102 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 	                    c[x][y].setContent("M");
 	                    JButton btn = btns[x][y];
-	                    btn.setIcon(gui.getIconMine());
-	                    btn.setBackground(Color.DARK_GRAY);
+	                    btn.setIcon(gui.getIconRedMine());
+	                    btn.setBackground(new Color(220, 53, 69)); 
 	                    return;
 	                }
 	            }
 	        }
 	    }
 	  
-	  private void revealRandom3x3(Board board) { // Reveals a random 3×3 area on the given board (mines or numbers)
-	        int centerX = rng.nextInt(board.getCols());
-	        int centerY = rng.nextInt(board.getRows());
+	  private void revealRandom3x3(Board board) { 
+		    int cols = board.getCols();
+		    int rows = board.getRows();
 
-	        JButton[][] btns = (board == boardA) ? gui.getButtonsA() : gui.getButtonsB();
-	        Cell[][] cells = board.getCells();
+		    JButton[][] btns = (board == boardA) ? gui.getButtonsA() : gui.getButtonsB();
+		    Cell[][] cells = board.getCells();
 
-	        for (int x = Math.max(0, centerX - 1); x <= Math.min(board.getCols() - 1, centerX + 1); x++) {
-	            for (int y = Math.max(0, centerY - 1); y <= Math.min(board.getRows() - 1, centerY + 1); y++) {
+		    int bestCenterX = -1;
+		    int bestCenterY = -1;
+		    int bestClosedCount = -1;
 
-	                Cell cell = cells[x][y];
-	                JButton btn = btns[x][y];
+		    // 1) Try to find a 3x3 where ALL 9 cells are closed
+		    for (int cx = 0; cx < cols; cx++) {
+		        for (int cy = 0; cy < rows; cy++) {
 
-	                if (!cell.getContent().equals(""))
-	                    continue;
+		            int closedCount = 0;
 
-	                if (cell.getMine()) {
-	                    btn.setIcon(gui.getIconMine());
-	                    cell.setContent("M");
-	                    continue;
-	                }
+		            for (int x = Math.max(0, cx - 1); x <= Math.min(cols - 1, cx + 1); x++) {
+		                for (int y = Math.max(0, cy - 1); y <= Math.min(rows - 1, cy + 1); y++) {
 
-	                int n = cell.getSurroundingMines();
-	                cell.setContent(Integer.toString(n));
+		                    String content = cells[x][y].getContent();
+		                    if (content == null) content = "";
 
-	                btn.setBackground(gui.CELL_REVEALED);
-	                if (n == 0) {
-	                    btn.setText("·");
-	                } else {
-	                    btn.setText(Integer.toString(n));
-	                    gui.setTextColor(btn);
-	                }
-	            }
-	        }
-	    }
+		                    if (content.equals("")) {
+		                        closedCount++;
+		                    }
+		                }
+		            }
+
+		            // if the 3x3 is fully closed (9 closed cells) -> pick it immediately
+		            if (closedCount == 9) {
+		                bestCenterX = cx;
+		                bestCenterY = cy;
+		                bestClosedCount = 9;
+		                break;
+		            }
+
+		            // otherwise keep the best 3x3 (max closed cells)
+		            if (closedCount > bestClosedCount) {
+		                bestClosedCount = closedCount;
+		                bestCenterX = cx;
+		                bestCenterY = cy;
+		            }
+		        }
+
+		        if (bestClosedCount == 9) break;
+		    }
+
+		    // If bestClosedCount <= 0 => no closed cells in any 3x3, nothing to reveal
+		    if (bestClosedCount <= 0) return;
+
+		    int centerX = bestCenterX;
+		    int centerY = bestCenterY;
+
+		    // 2) Reveal as many as possible in that 3x3 (ONLY closed cells)
+		    for (int x = Math.max(0, centerX - 1); x <= Math.min(cols - 1, centerX + 1); x++) {
+		        for (int y = Math.max(0, centerY - 1); y <= Math.min(rows - 1, centerY + 1); y++) {
+
+		            Cell cell = cells[x][y];
+		            JButton btn = btns[x][y];
+
+		            String content = cell.getContent();
+		            if (content == null) content = "";
+
+		            // Only reveal cells that are still closed
+		            if (!content.equals("")) continue;
+
+		            if (cell.getMine()) {
+		            	btn.setIcon(gui.getIconRedMine());
+		            	btn.setBackground(new Color(220, 53, 69)); 
+		            	cell.setContent("M");
+		                continue;
+		            }
+
+		            int n = cell.getSurroundingMines();
+		            cell.setContent(Integer.toString(n));
+
+		            btn.setBackground(gui.CELL_REVEALED);
+		            if (n == 0) {
+		                btn.setText("·");
+		            } else {
+		                btn.setText(Integer.toString(n));
+		                gui.setTextColor(btn);
+		            }
+		        }
+		    }
+		}
+
 
 	@Override
 	public void mousePressed(MouseEvent e) {
