@@ -46,19 +46,24 @@ public class MineSweeper extends JFrame {
     private int FRAME_HEIGHT = 900;
 
     public final Color DARK_NAVY = new Color(8, 22, 30); // Main background
-
     public final Color BOARD_BG = new Color(13, 42, 56);
 
-    // colors come from PlayerSetupView 
+    // colors come from PlayerSetupView
     public final Color BOARD_BG_A = PlayerSetupView.getPlayer1BoardColorChoice();
     public final Color BOARD_BG_B = PlayerSetupView.getPlayer2BoardColorChoice();
 
-    public final Color CELL_HIDDEN_A   = PlayerSetupView.getPlayer1BoardColorChoice().darker();
-    public final Color CELL_HIDDEN_B   = PlayerSetupView.getPlayer2BoardColorChoice().darker();
-    public final Color CELL_REVEALED   = new Color(230, 245, 248);
-    public final Color CELL_HOVER      = new Color(19, 104, 126);
-    public final Color Q_HIGHLIGHT     = new Color(255, 183, 77);
-    public final Color S_HIGHLIGHT     = new Color(129, 212, 250);
+    // closed cells are derived from board colors (as you had)
+    public final Color CELL_HIDDEN_A = PlayerSetupView.getPlayer1BoardColorChoice().darker();
+    public final Color CELL_HIDDEN_B = PlayerSetupView.getPlayer2BoardColorChoice().darker();
+
+    // revealed normal cell background
+    public final Color CELL_REVEALED = new Color(238, 246, 248);
+
+    public final Color CELL_HOVER = new Color(19, 104, 126);
+
+    // Softer pastel highlights 
+    public final Color Q_HIGHLIGHT = new Color(255, 236, 179); // pastel amber
+    public final Color S_HIGHLIGHT = new Color(187, 222, 251); // pastel blue
 
     public final Color SUCCESS_COLOR = new Color(0, 191, 165);
     public final Color TEXT_WHITE = new Color(245, 245, 245);
@@ -68,6 +73,14 @@ public class MineSweeper extends JFrame {
     private final Color NUM_GREEN = new Color(102, 187, 106);
     private final Color NUM_RED = new Color(239, 83, 80);
     private final Color NUM_PURPLE = new Color(171, 71, 188);
+
+    // mine reveal styling
+    private final Color MINE_BG     = new Color(183, 28, 28);  // soft deep red 
+    private final Color MINE_BORDER = new Color(120, 20, 30);  // darker red border
+
+    // borders for Q/S cells
+    private final Color Q_BORDER = new Color(255, 193, 7);     // amber border
+    private final Color S_BORDER = new Color(66, 165, 245);    // blue border
 
     private Icon redMine, mine, tile, smallMineIcon;
 
@@ -122,6 +135,29 @@ public class MineSweeper extends JFrame {
             setIconImage(Toolkit.getDefaultToolkit().getImage(getClass().getResource("/resources/mine.png")));
         } catch (Exception e) {
         }
+    }
+
+    // ---------- color helpers (UI only) ----------
+    private Color darken(Color c, float factor) {
+        factor = Math.max(0f, Math.min(1f, factor));
+        int r = Math.max(0, Math.round(c.getRed() * (1f - factor)));
+        int g = Math.max(0, Math.round(c.getGreen() * (1f - factor)));
+        int b = Math.max(0, Math.round(c.getBlue() * (1f - factor)));
+        return new Color(r, g, b);
+    }
+
+    private Color lighten(Color c, float factor) {
+        factor = Math.max(0f, Math.min(1f, factor));
+        int r = Math.min(255, Math.round(c.getRed() + (255 - c.getRed()) * factor));
+        int g = Math.min(255, Math.round(c.getGreen() + (255 - c.getGreen()) * factor));
+        int b = Math.min(255, Math.round(c.getBlue() + (255 - c.getBlue()) * factor));
+        return new Color(r, g, b);
+    }
+
+    private boolean isDark(Color c) {
+        // perceived luminance
+        double lum = 0.2126 * c.getRed() + 0.7152 * c.getGreen() + 0.0722 * c.getBlue();
+        return lum < 140;
     }
 
     private JPanel createTopBar() {
@@ -272,7 +308,6 @@ public class MineSweeper extends JFrame {
         return boardsContainer;
     }
 
-    //updates the number of mines left to reveal on the boards
     public void updateMinesLeft(int minesA, int minesB) {
         if (minesLeftALabel != null) {
             minesLeftALabel.setText("  " + minesA);
@@ -286,13 +321,17 @@ public class MineSweeper extends JFrame {
         JPanel card = new JPanel(new BorderLayout(0, 10));
 
         Color cardBg = isBoardA ? BOARD_BG_A : BOARD_BG_B;
+
+        // UI improvement: header slightly darker for readability, but still based on chosen color
+        Color headerBg = darken(cardBg, 0.18f);
+
         Color borderColor = isBoardA ? new Color(0, 191, 165) : new Color(171, 71, 188);
 
         card.setBackground(cardBg);
         card.setBorder(new LineBorder(borderColor, 2, true));
 
         JPanel header = new JPanel(new BorderLayout());
-        header.setBackground(cardBg);
+        header.setBackground(headerBg);
         header.setBorder(new EmptyBorder(15, 15, 10, 15));
 
         JPanel leftPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 15, 0));
@@ -347,18 +386,6 @@ public class MineSweeper extends JFrame {
         return card;
     }
 
-    private JLabel createIconLabel(String text, Color color) {
-        JLabel label = new JLabel(text);
-        label.setFont(new Font("Segoe UI", Font.BOLD, 14));
-        label.setForeground(color.darker());
-        label.setOpaque(true);
-        label.setBackground(new Color(color.getRed(), color.getGreen(), color.getBlue(), 40));
-        label.setBorder(
-                BorderFactory.createCompoundBorder(new LineBorder(color, 1, true), new EmptyBorder(5, 10, 5, 10)));
-
-        return label;
-    }
-
     private JPanel createBottomStatusPanel() {
         JPanel statusPanel = new JPanel(new BorderLayout(30, 0));
         statusPanel.setBackground(BOARD_BG);
@@ -409,7 +436,6 @@ public class MineSweeper extends JFrame {
         return statusPanel;
     }
 
-    //updates lives display
     private void updateHeartsDisplay(int current, int max) {
         String fullHeart = "\u2665";  // ♥
         String emptyHeart = "\u2661"; // ♡
@@ -436,12 +462,22 @@ public class MineSweeper extends JFrame {
         button.setPreferredSize(new Dimension(50, 50));
 
         boolean isA = "A".equals(board);
-        button.setBackground(isA ? CELL_HIDDEN_A : CELL_HIDDEN_B);
+        Color bg = isA ? CELL_HIDDEN_A : CELL_HIDDEN_B;
 
-        button.setForeground(TEXT_WHITE);
+        button.setOpaque(true);
+        button.setContentAreaFilled(true);
+        button.setBackground(bg);
+
+        // better contrast on hidden cells
+        button.setForeground(isDark(bg) ? TEXT_WHITE : new Color(20, 20, 20));
+
         button.setFont(new Font("Segoe UI", Font.BOLD, 24));
         button.setFocusPainted(false);
-        button.setBorder(new LineBorder(isA ? BOARD_BG_A : BOARD_BG_B, 1, true));
+
+        // subtle border (not screaming)
+        Color border = isA ? darken(BOARD_BG_A, 0.20f) : darken(BOARD_BG_B, 0.20f);
+        button.setBorder(new LineBorder(border, 1, true));
+
         button.setName(board + ":" + x + "," + y);
         button.putClientProperty("board", board);
 
@@ -553,11 +589,15 @@ public class MineSweeper extends JFrame {
             for (int y = 0; y < rows; y++) {
                 buttonsA[x][y].setText("");
                 buttonsA[x][y].setBackground(CELL_HIDDEN_A);
+                buttonsA[x][y].setForeground(isDark(CELL_HIDDEN_A) ? TEXT_WHITE : new Color(20,20,20));
                 buttonsA[x][y].setIcon(null);
+                buttonsA[x][y].setBorder(new LineBorder(darken(BOARD_BG_A, 0.20f), 1, true));
 
                 buttonsB[x][y].setText("");
                 buttonsB[x][y].setBackground(CELL_HIDDEN_B);
+                buttonsB[x][y].setForeground(isDark(CELL_HIDDEN_B) ? TEXT_WHITE : new Color(20,20,20));
                 buttonsB[x][y].setIcon(null);
+                buttonsB[x][y].setBorder(new LineBorder(darken(BOARD_BG_B, 0.20f), 1, true));
             }
         }
     }
@@ -648,44 +688,60 @@ public class MineSweeper extends JFrame {
 
         for (int x = 0; x < board.getCols(); x++) {
             for (int y = 0; y < board.getRows(); y++) {
+
                 JButton b = buttons[x][y];
                 Cell cell = cells[x][y];
 
+                // Disable button after reveal
                 b.setEnabled(false);
 
+                // ===== MINE ===== (keep red)
                 if (cell.getMine()) {
-                    b.setIcon(getIconMine());
-                    b.setBackground(Color.BLACK);
+                    b.setBackground(MINE_BG);
+                    b.setBorder(new LineBorder(MINE_BORDER, 2, true));
+                    b.setIcon(getIconRedMine());
+                    b.setText("");
+                    continue;
+                }
+
+                SpecialBoxType special = cell.getSpecialBox();
+                String content = cell.getContent();
+                if (content == null) content = "";
+
+                // ===== SURPRISE ===== (pastel + border)
+                if (special == SpecialBoxType.SURPRISE && !"USED".equals(content)) {
+                    b.setIcon(null);
+                    b.setBackground(S_HIGHLIGHT);
+                    b.setBorder(new LineBorder(S_BORDER, 2, true));
+                    b.setText("🎁");
+                    b.setFont(new Font("Segoe UI Emoji", Font.BOLD, 18));
+                    b.setForeground(new Color(30, 30, 30));
+                    continue;
+                }
+
+                // ===== QUESTION ===== (pastel + border)
+                if (special == SpecialBoxType.QUESTION && !"USED".equals(content)) {
+                    b.setIcon(null);
+                    b.setBackground(Q_HIGHLIGHT);
+                    b.setBorder(new LineBorder(Q_BORDER, 2, true));
+                    b.setText("❓");
+                    b.setFont(new Font("Segoe UI Emoji", Font.BOLD, 18));
+                    b.setForeground(new Color(30, 30, 30));
+                    continue;
+                }
+
+                // ===== NORMAL CELL =====
+                int n = cell.getSurroundingMines();
+                b.setBackground(CELL_REVEALED);
+                b.setBorder(new LineBorder(new Color(210, 220, 230), 1, true));
+
+                if (n == 0) {
+                    b.setText("·");
+                    b.setForeground(new Color(160, 170, 200, 110));
+                    b.setFont(new Font("Arial", Font.BOLD, 24));
                 } else {
-                    SpecialBoxType special = cell.getSpecialBox();
-                    String content = cell.getContent();
-                    if (content == null) content = "";
-
-                    if (special == SpecialBoxType.SURPRISE && !"USED".equals(content)) {
-                        b.setIcon(null);
-                        b.setBackground(Color.ORANGE);
-                        b.setText("🎁");
-                        b.setFont(new Font("Serif", Font.BOLD, 18));
-                        b.setForeground(Color.RED);
-                    } else if (special == SpecialBoxType.QUESTION && !"USED".equals(content)) {
-                        b.setIcon(null);
-                        b.setBackground(Color.YELLOW);
-                        b.setText("❓");
-                        b.setFont(new Font("Serif", Font.BOLD, 18));
-                        b.setForeground(Color.RED);
-                    } else {
-                        int n = cell.getSurroundingMines();
-                        b.setBackground(CELL_REVEALED);
-
-                        if (n == 0) {
-                            b.setText("·");
-                            b.setForeground(new Color(160, 170, 200, 100));
-                            b.setFont(new Font("Arial", Font.BOLD, 24));
-                        } else {
-                            b.setText(Integer.toString(n));
-                            setTextColor(b);
-                        }
-                    }
+                    b.setText(Integer.toString(n));
+                    setTextColor(b);
                 }
             }
         }
@@ -723,6 +779,7 @@ public class MineSweeper extends JFrame {
         b.setForeground(new Color(40, 40, 40));
         b.setText("Q");
         b.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        b.setBorder(new LineBorder(Q_BORDER, 2, true));
     }
 
     public void highlightSCell(JButton b) {
@@ -730,14 +787,14 @@ public class MineSweeper extends JFrame {
         b.setForeground(new Color(20, 40, 60));
         b.setText("S");
         b.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        b.setBorder(new LineBorder(S_BORDER, 2, true));
     }
 
     public void updateStatus(int sharedScore, int lives) {
         if (scoreLabel != null) {
             scoreLabel.setText(String.valueOf(sharedScore));
         }
-        int maxLives = (currentDifficulty != null) ? currentDifficulty.getLives() : lives;
-        updateLives(lives, maxLives);
+        updateLives(lives, 10);
     }
 
     public void updateLives(int current, int max) {
@@ -748,13 +805,17 @@ public class MineSweeper extends JFrame {
     }
 
     public void initStatus(int lives) {
+        int max = 10;
+
         if (livesLabel != null) {
-            livesLabel.setText(lives + " / " + lives);
+            livesLabel.setText(lives + " / " + max);
         }
+
         if (scoreLabel != null) {
             scoreLabel.setText("0");
         }
-        updateHeartsDisplay(lives, lives);
+
+        updateHeartsDisplay(lives, max);
     }
 
     public void setDifficulty(Difficulty diff) {
@@ -769,12 +830,19 @@ public class MineSweeper extends JFrame {
                 score, timeSeconds
         );
 
-        JOptionPane.showMessageDialog(
+        Object[] options = {"Main Page", "New Game", "Exit"};
+        int choice = JOptionPane.showOptionDialog(
                 this,
                 message,
                 "Victory!",
-                JOptionPane.INFORMATION_MESSAGE
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]
         );
+
+        handleEndDialogChoice(choice);
     }
 
     public void showGameOverDialog(int score) {
@@ -784,12 +852,40 @@ public class MineSweeper extends JFrame {
                 score
         );
 
-        JOptionPane.showMessageDialog(
+        Object[] options = {"Main Page", "New Game", "Exit"};
+        int choice = JOptionPane.showOptionDialog(
                 this,
                 message,
                 "Game Over",
-                JOptionPane.INFORMATION_MESSAGE
+                JOptionPane.DEFAULT_OPTION,
+                JOptionPane.INFORMATION_MESSAGE,
+                null,
+                options,
+                options[0]
         );
+
+        handleEndDialogChoice(choice);
+    }
+
+    private void handleEndDialogChoice(int choice) {
+        if (choice == 0) {
+            goToMainPage();
+        } else if (choice == 1) {
+            if (game != null) {
+                game.newGame();
+            }
+        } else {
+            System.exit(0);
+        }
+    }
+
+    private void goToMainPage() {
+        dispose();
+
+        SwingUtilities.invokeLater(() -> {
+            MainPage mainPage = new MainPage();
+            mainPage.setVisible(true);
+        });
     }
 
     public void showSurpriseDialog(boolean isBonus) {
@@ -828,10 +924,9 @@ public class MineSweeper extends JFrame {
                     JOptionPane.QUESTION_MESSAGE,
                     null,
                     options,
-                    options[0]   // default selected
+                    options[0]
             );
 
-            // If user closes the dialog or presses Cancel → answer == null
             if (answer == null) {
                 JOptionPane.showMessageDialog(
                         this,
@@ -839,15 +934,12 @@ public class MineSweeper extends JFrame {
                         "Question Box",
                         JOptionPane.WARNING_MESSAGE
                 );
-                // loop again – show the dialog once more
                 continue;
             }
 
-            // Valid selection → return it
             return answer;
         }
     }
-
 
     public void showCorrectAnswerDialog() {
         JOptionPane.showMessageDialog(
