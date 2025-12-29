@@ -1,7 +1,6 @@
 package view;
 
 import model.SysData;    
-import view.GameHistory;
 
 import javax.swing.*;
 import java.awt.*;
@@ -88,9 +87,11 @@ public class MainPage extends JFrame {
                 new Color(51, 102, 255),
                 historyIcon,
                 () -> {
-                    SysData sysData = new SysData();
-                    GameHistory historyDialog = new GameHistory(MainPage.this, sysData);
-                    historyDialog.setVisible(true);
+                    SwingUtilities.invokeLater(() -> {
+                        SysData sysData = new SysData();
+                        GameHistory historyDialog = new GameHistory(MainPage.this, sysData);
+                        historyDialog.setVisible(true);
+                    });
                 }
         );
 
@@ -99,9 +100,11 @@ public class MainPage extends JFrame {
                 new Color(0, 153, 76),
                 manageIcon,
                 () -> {
-                    SysData sysData = new SysData();
-                    QuestionManagerFrame qm = new QuestionManagerFrame(sysData);
-                    qm.setVisible(true);
+                    SwingUtilities.invokeLater(() -> {
+                        SysData sysData = new SysData();
+                        QuestionManagerFrame qm = new QuestionManagerFrame(sysData);
+                        qm.setVisible(true);
+                    });
                 }
         );
 
