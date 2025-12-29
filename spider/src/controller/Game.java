@@ -990,6 +990,9 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	}
 	 private void clampLives() { // Clamps lives between 0 and max and converts extra lives to points.
 	        int max = getMaxLives();
+	        if (sharedLives < 0) {
+	            sharedLives = 0;
+	        }
 
 	        if (sharedLives > max) {
 	            int extraLives = sharedLives - max;
@@ -1003,9 +1006,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 	        }
 
-	        if (sharedLives < 0) {
-	            sharedLives = 0;
-	        }
+	        
 	    }
 	 
 	  private void revealRandomMine(Board board) { // Reveals one hidden mine on the given board (first one found).
