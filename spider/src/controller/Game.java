@@ -15,6 +15,7 @@ import java.sql.Date;
 import model.Board;
 import model.BoardFactory;
 import model.Cell;
+import model.CellActionContext;
 import model.Difficulty;
 import model.EasyBoardFactory;
 import model.HardBoardFactory;
@@ -27,7 +28,7 @@ import model.SpecialBoxType;
 import view.MineSweeper;
 import model.SysData;
 
-public class Game implements MouseListener, ActionListener, WindowListener {
+public class Game implements CellActionContext, MouseListener, ActionListener, WindowListener {
 
 	private boolean playing;
 
@@ -1155,6 +1156,42 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		        }
 		    }
 		}
+	  private JButton getButtonForCell(Cell cell) {
+		    for (int x = 0; x < boardA.getCols(); x++) {
+		        for (int y = 0; y < boardA.getRows(); y++) {
+		            if (boardA.getCells()[x][y] == cell) {
+		                return gui.getButtonsA()[x][y];
+		            }
+		            if (boardB.getCells()[x][y] == cell) {
+		                return gui.getButtonsB()[x][y];
+		            }
+		        }
+		    }
+		    return null;
+		}
+	  private Board getBoardForCell(Cell cell) {
+		    for (int x = 0; x < boardA.getCols(); x++) {
+		        for (int y = 0; y < boardA.getRows(); y++) {
+		            if (boardA.getCells()[x][y] == cell) return boardA;
+		            if (boardB.getCells()[x][y] == cell) return boardB;
+		        }
+		    }
+		    return null;
+		}
+	  private int[] getCellCoordinates(Cell cell, Board board) {
+		    for (int x = 0; x < board.getCols(); x++) {
+		        for (int y = 0; y < board.getRows(); y++) {
+		            if (board.getCells()[x][y] == cell) {
+		                return new int[]{x, y};
+		            }
+		        }
+		    }
+		    return null;
+		}
+
+
+	  
+	  
 
 
 	@Override
@@ -1195,5 +1232,64 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 	@Override
 	public void windowDeactivated(WindowEvent e) {
+	}
+	
+@Override
+	
+	public void handleMine(Cell cell) {
+	    JButton btn = getButtonForCell(cell);
+	    Board board = getBoardForCell(cell);
+	    int[] xy = getCellCoordinates(cell, board);
+
+	    handleMineClick(xy[0], xy[1], board, btn);
+	}
+
+
+	@Override
+	public void handleQuestion(Cell cell) {
+	    JButton btn = getButtonForCell(cell);
+	    Board board = getBoardForCell(cell);
+	    int[] xy = getCellCoordinates(cell, board);
+
+	    handleQuestionBox(xy[0], xy[1], board, btn);
+	    
+	}
+
+
+	@Override
+	public void handleSurprise(Cell cell) {
+	    JButton btn = getButtonForCell(cell);
+	    Board board = getBoardForCell(cell);
+	    int[] xy = getCellCoordinates(cell, board);
+
+	    handleSurpriseBox(xy[0], xy[1], board, btn);
+	  
+	}
+
+
+	@Override
+	public void handleSafeCell(Cell cell) {
+	    JButton btn = getButtonForCell(cell);
+	    Board board = getBoardForCell(cell);
+	    int[] xy = getCellCoordinates(cell, board);
+
+	    int neighbours = cell.getSurroundingMines();
+
+	    sharedScore += 1;
+	    gui.updateStatus(sharedScore, sharedLives);
+
+	    cell.setContent(Integer.toString(neighbours));
+	    btn.setBackground(gui.CELL_REVEALED);
+
+	    if (neighbours == 0) {
+	        btn.setText("·");
+	        findZeroes(xy[0], xy[1], board,
+	                board == boardA ? gui.getButtonsA() : gui.getButtonsB());
+	    } else {
+	        btn.setText(Integer.toString(neighbours));
+	        gui.setTextColor(btn);
+	    }
+
+	    switchTurn();
 	}
 }
