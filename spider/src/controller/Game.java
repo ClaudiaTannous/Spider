@@ -13,8 +13,12 @@ import java.awt.event.WindowListener;
 import java.util.Random;
 import java.sql.Date;
 import model.Board;
+import model.BoardFactory;
 import model.Cell;
 import model.Difficulty;
+import model.EasyBoardFactory;
+import model.HardBoardFactory;
+import model.MediumBoardFactory;
 import model.Player;
 import model.Question;
 import model.QuestionDifficulty;
@@ -29,6 +33,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 	private Board boardA;
 	private Board boardB;
+	private BoardFactory boardFactory;
 	private boolean flagMode = false;
 	private Player player1;
 	private Player player2;
@@ -59,6 +64,11 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		this.sharedScore = 0;
 
 		this.playing = false;
+		this.boardFactory = switch (difficulty) {
+	    case EASY -> new EasyBoardFactory();
+	    case MEDIUM -> new MediumBoardFactory();
+	    case HARD -> new HardBoardFactory();
+	};
 
 		initializePlayers(player1Name, player2Name);
 		createBoards();
