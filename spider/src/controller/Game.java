@@ -25,6 +25,7 @@ import model.Question;
 import model.QuestionDifficulty;
 import model.Score;
 import model.SpecialBoxType;
+import view.GameObserver;
 import view.MineSweeper;
 import model.SysData;
 
@@ -47,6 +48,7 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 
 	private Score score;
 	private SysData sysData;
+	private GameObserver observer;
 
 	private Difficulty currentDifficulty;
 	private final Random rng = new Random();
@@ -85,6 +87,9 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 		gui.setIcons();
 		gui.hideAll();
 
+	}
+	public void setObserver(GameObserver observer) {
+	    this.observer = observer;
 	}
 
 	private int getActivationCost(Difficulty diff) {
