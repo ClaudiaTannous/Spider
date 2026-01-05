@@ -313,67 +313,96 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 	 // Recursively reveals empty neighbors around a zero cell (including specials:questions\surprises).
 	private void findZeroes(int x, int y, Board board, JButton[][] buttons) {
+	    boolean[][] visited = new boolean[board.getCols()][board.getRows()];
+	    findZeroes(x, y, board, buttons, visited);
+	}
 
-		Cell[][] cells = board.getCells();
 
-		for (int tempX = board.makeValidCoordinateX(x - 1); tempX <= board.makeValidCoordinateX(x + 1); tempX++) {
+	private void findZeroes(
+	        int x,
+	        int y,
+	        Board board,
+	        JButton[][] buttons,
+	        boolean[][] visited
+	) {
+	    // אם כבר ביקרנו כאן – עוצרים
+	    if (visited[x][y]) return;
+	    visited[x][y] = true;
 
-			for (int tempY = board.makeValidCoordinateY(y - 1); tempY <= board.makeValidCoordinateY(y + 1); tempY++) {
+	    Cell[][] cells = board.getCells();
 
-				if (tempX == x && tempY == y)
-					continue;
+	    for (int tempX = board.makeValidCoordinateX(x - 1);
+	         tempX <= board.makeValidCoordinateX(x + 1);
+	         tempX++) {
 
-				Cell cell = cells[tempX][tempY];
-				JButton btn = buttons[tempX][tempY];
+	        for (int tempY = board.makeValidCoordinateY(y - 1);
+	             tempY <= board.makeValidCoordinateY(y + 1);
+	             tempY++) {
 
-				String c = cell.getContent();
+	            if (tempX == x && tempY == y)
+	                continue;
 
-				if (!c.equals("") && !c.equals("❓"))
-					continue;
+	            Cell cell = cells[tempX][tempY];
+	            JButton btn = buttons[tempX][tempY];
 
-				if (cell.getMine())
-					continue;
+	            String content = cell.getContent();
+	            if (content == null) content = "";
 
-				SpecialBoxType special = cell.getSpecialBox();
+	            // מוקש – לא ממשיכים
+	            if (cell.getMine())
+	                continue;
 
-				if (special == SpecialBoxType.SURPRISE) {
-					cell.setContent("🎁");
-					btn.setIcon(null);
-					btn.setText("🎁");
-					btn.setFont(new Font("Serif", Font.BOLD, 18));
-					btn.setForeground(new Color(30, 30, 30));
-					btn.setBackground(gui.S_HIGHLIGHT);
-					continue;
-				}
+	            // אם התא כבר נפתח כמספר או USED – לא ממשיכים
+	            if (!content.equals("") && !content.equals("❓"))
+	                continue;
 
-				if (special == SpecialBoxType.QUESTION) {
-					cell.setContent("❓");
-					btn.setIcon(null);
-					btn.setText("❓");
-					btn.setFont(new Font("Serif", Font.BOLD, 18));
-					btn.setForeground(new Color(30, 30, 30));
-					btn.setBackground(gui.Q_HIGHLIGHT);
-					continue;
-				}
+	            SpecialBoxType special = cell.getSpecialBox();
 
-				int neighbours = cell.getSurroundingMines();
-				cell.setContent(Integer.toString(neighbours));
+	            //  Surprise  
+	            if (special == SpecialBoxType.SURPRISE && content.equals("")) {
+	                cell.setContent("🎁");
+	                btn.setIcon(null);
+	                btn.setText("🎁");
+	                btn.setFont(new Font("Serif", Font.BOLD, 18));
+	                btn.setForeground(new Color(30, 30, 30));
+	                btn.setBackground(gui.S_HIGHLIGHT);
+	                findZeroes(tempX, tempY, board, buttons, visited);
+	                continue;
+	            }
 
-				btn.setBackground(gui.CELL_REVEALED);
+	            //  Question 
+	            if (special == SpecialBoxType.QUESTION) {
+	                if (!content.equals("❓")) {
+	                    cell.setContent("❓");
+	                    btn.setIcon(null);
+	                    btn.setText("❓");
+	                    btn.setFont(new Font("Serif", Font.BOLD, 18));
+	                    btn.setForeground(new Color(30, 30, 30));
+	                    btn.setBackground(gui.Q_HIGHLIGHT);
+	                }
 
-				if (neighbours == 0) {
-					btn.setText("·");
-					btn.setForeground(new Color(160, 170, 200, 100));
-					btn.setFont(new Font("Arial", Font.BOLD, 24));
+	                // cascade for question cell
+	                findZeroes(tempX, tempY, board, buttons, visited);
+	                continue;
+	            }
 
-					findZeroes(tempX, tempY, board, buttons);
+	            
+	            int neighbours = cell.getSurroundingMines();
+	            cell.setContent(Integer.toString(neighbours));
+	            btn.setBackground(gui.CELL_REVEALED);
 
-				} else {
-					btn.setText(Integer.toString(neighbours));
-					gui.setTextColor(btn);
-				}
-			}
-		}
+	            if (neighbours == 0) {
+	                btn.setText("·");
+	                btn.setForeground(new Color(160, 170, 200, 100));
+	                btn.setFont(new Font("Arial", Font.BOLD, 24));
+
+	                findZeroes(tempX, tempY, board, buttons, visited);
+	            } else {
+	                btn.setText(Integer.toString(neighbours));
+	                gui.setTextColor(btn);
+	            }
+	        }
+	    }
 	}
 
 	  // Reveals all cells on both boards using GUI helper methods.
