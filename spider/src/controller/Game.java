@@ -29,13 +29,16 @@ import view.GameObserver;
 import view.MineSweeper;
 import model.SysData;
 
-public class Game implements CellActionContext, MouseListener, ActionListener, WindowListener {
+public class Game implements CellActionContext,MouseListener, ActionListener, WindowListener {
 
 	private boolean playing;
+	private BoardFactory boardFactory;
+	private GameObserver observer;
+
+
 
 	private Board boardA;
 	private Board boardB;
-	private BoardFactory boardFactory;
 	private boolean flagMode = false;
 	private Player player1;
 	private Player player2;
@@ -48,7 +51,6 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 
 	private Score score;
 	private SysData sysData;
-	private GameObserver observer;
 
 	private Difficulty currentDifficulty;
 	private final Random rng = new Random();
@@ -65,6 +67,7 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 		this.currentDifficulty = difficulty;
 		this.sysData = new SysData();
 		this.sharedScore = 0;
+		
 
 		this.playing = false;
 		this.boardFactory = switch (difficulty) {
@@ -73,9 +76,11 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 	    case HARD -> new HardBoardFactory();
 	};
 
+
 		initializePlayers(player1Name, player2Name);
 		createBoards();
 		updateMineCounters();
+		
 
 		gui.initGame();
 		gui.setMines(currentDifficulty.getMines());
@@ -91,6 +96,7 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 	public void setObserver(GameObserver observer) {
 	    this.observer = observer;
 	}
+
 
 	private int getActivationCost(Difficulty diff) {
 		return switch (diff) {
@@ -134,17 +140,19 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 
 		this.gui = new MineSweeper(this, currentDifficulty.getRows(), currentDifficulty.getCols(),
 				currentDifficulty.getMines(), player1.getName(), player2.getName());
+		this.setObserver(this.gui);
+
 		this.gui.setButtonListeners(this);
 		this.gui.initStatus(sharedLives);
 		this.gui.setDifficulty(currentDifficulty);
 	}
 
-	public void createBoards() {// Creates a fresh Board for each player based on the current difficulty and
-								// updates the GUI mine count.
-		boardA = new Board(currentDifficulty);
-		boardB = new Board(currentDifficulty);
-		gui.setMines(currentDifficulty.getMines());
+	public void createBoards() {
+	    boardA = boardFactory.createBoard();
+	    boardB = boardFactory.createBoard();
+	    gui.setMines(currentDifficulty.getMines());
 	}
+
 
 	// Enables or disables flag mode
 	public void setFlagMode(boolean flagMode) {
@@ -262,7 +270,10 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 		sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "WIN",
 				gui.getTimePassed());
 
-		gui.showVictoryDialog(sharedScore, gui.getTimePassed());
+		if (observer != null) {
+		    observer.onGameOver(true, sharedScore, gui.getTimePassed());
+		}
+
 
 		score.addTime(gui.getTimePassed(), new Date(System.currentTimeMillis()));
 		score.save();
@@ -281,7 +292,10 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 		sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "LOST",
 				gui.getTimePassed());
 
-		gui.showGameOverDialog(sharedScore);
+		if (observer != null) {
+		    observer.onGameOver(false, sharedScore, gui.getTimePassed());
+		}
+
 
 		score.save();
 	}
@@ -326,8 +340,6 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 
 		return true;
 	}
-
-	 // Recursively reveals empty neighbors around a zero cell (including specials:questions\surprises).
 	private void findZeroes(int x, int y, Board board, JButton[][] buttons) {
 	    boolean[][] visited = new boolean[board.getCols()][board.getRows()];
 	    findZeroes(x, y, board, buttons, visited);
@@ -374,7 +386,7 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 
 	            SpecialBoxType special = cell.getSpecialBox();
 
-	            //  Surprise  
+	            // 🎁 Surprise – נחשף אבל לא ממשיך קסקדה
 	            if (special == SpecialBoxType.SURPRISE && content.equals("")) {
 	                cell.setContent("🎁");
 	                btn.setIcon(null);
@@ -386,7 +398,7 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 	                continue;
 	            }
 
-	            //  Question 
+	            // ❓ Question – מתנהג כמו תא ריק וממשיך קסקדה
 	            if (special == SpecialBoxType.QUESTION) {
 	                if (!content.equals("❓")) {
 	                    cell.setContent("❓");
@@ -397,12 +409,12 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 	                    btn.setBackground(gui.Q_HIGHLIGHT);
 	                }
 
-	                // cascade for question cell
+	                // ממשיכים קסקדה דרך השאלה
 	                findZeroes(tempX, tempY, board, buttons, visited);
 	                continue;
 	            }
 
-	            
+	            // תא רגיל
 	            int neighbours = cell.getSurroundingMines();
 	            cell.setContent(Integer.toString(neighbours));
 	            btn.setBackground(gui.CELL_REVEALED);
@@ -421,6 +433,7 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 	    }
 	}
 
+
 	  // Reveals all cells on both boards using GUI helper methods.
 	 private void showAll() {
 	        gui.revealAllBoard(boardA, gui.getButtonsA());
@@ -438,6 +451,7 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 	     }
 	 }
 
+
 	private void handleSurpriseBox(int x, int y, Board board, JButton button) {  // Handles clicks on a surprise box and applies random effect.
 		Cell cell = board.getCells()[x][y];
 		String content = cell.getContent();
@@ -453,7 +467,10 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 			cell.setContent("🎁");
 
 			sharedScore += 1;
-			gui.updateStatus(sharedScore, sharedLives);
+			if (observer != null) {
+			    observer.onStatusChanged(sharedScore, sharedLives);
+			}
+
 			return;
 		}
 
@@ -808,6 +825,7 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 	    checkGame();
 	}
 
+
 	 // Applies question outcome (points, lives, reveals) based on difficulty and answer.
 	private void applyQuestionOutcome(Difficulty gameDiff, QuestionDifficulty qDiff, boolean correct, Board board) {
 
@@ -1151,8 +1169,7 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 		}
 
 
-	  
-	  
+
 
 
 	@Override
@@ -1195,7 +1212,7 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 	public void windowDeactivated(WindowEvent e) {
 	}
 	
-@Override
+	@Override
 	
 	public void handleMine(Cell cell) {
 	    JButton btn = getButtonForCell(cell);
@@ -1253,4 +1270,6 @@ public class Game implements CellActionContext, MouseListener, ActionListener, W
 
 	    switchTurn();
 	}
+	
+
 }

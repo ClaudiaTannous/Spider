@@ -10,7 +10,7 @@ import model.Cell;
 import model.Difficulty;
 import model.SpecialBoxType;
 
-public class MineSweeper extends JFrame {
+public class MineSweeper extends JFrame implements GameObserver {
     private static final long serialVersionUID = 1L;
 
     private JPanel boardPanelA, boardPanelB;
@@ -967,4 +967,23 @@ public class MineSweeper extends JFrame {
                 JOptionPane.WARNING_MESSAGE
         );
     }
+    @Override
+    public void onStatusChanged(int score, int lives) {
+        updateStatus(score, lives);
+    }
+
+    @Override
+    public void onTurnChanged(String activeBoard) {
+        setActiveBoard(activeBoard);
+    }
+
+    @Override
+    public void onGameOver(boolean win, int score, int time) {
+        if (win) {
+            showVictoryDialog(score, time);
+        } else {
+            showGameOverDialog(score);
+        }
+    }
+
 }
