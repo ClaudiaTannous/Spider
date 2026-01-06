@@ -4,9 +4,8 @@ import java.util.ArrayList;
 import java.util.List;
 import java.util.Random;
 
-
 public class Board {
-	
+
     private int numberOfMines;
     private Cell[][] cells;
     private int rows;
@@ -14,8 +13,6 @@ public class Board {
     private int surpriseBoxes;
     private int questionBoxes;
     private Difficulty difficulty;
-
-   
 
     public Board(Difficulty difficulty) {
         this.difficulty = difficulty;
@@ -27,21 +24,14 @@ public class Board {
 
         cells = new Cell[cols][rows];
 
-     
         createEmptyCells();
-
-        
-        setSpecialBoxes();
-
-       
-        setMines();
-
-       
+        setSpecialBoxes();        
+        setMines();               
         setSurroundingMinesNumber();
     }
 
-   
-    public void createEmptyCells() {
+    
+    private void createEmptyCells() {
         for (int x = 0; x < cols; x++) {
             for (int y = 0; y < rows; y++) {
                 cells[x][y] = new Cell();
@@ -50,42 +40,44 @@ public class Board {
         }
     }
 
-    
-    public void setSpecialBoxes() {
+   
+    private void setSpecialBoxes() {
         Random rand = new Random();
         List<String> usedPositions = new ArrayList<>();
 
-     
-        int currentSurpriseBoxes = 0;
-        while (currentSurpriseBoxes < surpriseBoxes) {
+        int currentSurprise = 0;
+        while (currentSurprise < surpriseBoxes) {
             int x = rand.nextInt(cols);
             int y = rand.nextInt(rows);
-            String position = x + "," + y;
+            String pos = x + "," + y;
 
-            if (!usedPositions.contains(position) && cells[x][y].getSpecialBox() == SpecialBoxType.NONE) {
+            if (!usedPositions.contains(pos)
+                    && cells[x][y].getSpecialBox() == SpecialBoxType.NONE) {
+
                 cells[x][y].setSpecialBox(SpecialBoxType.SURPRISE);
-                usedPositions.add(position);
-                currentSurpriseBoxes++;
+                usedPositions.add(pos);
+                currentSurprise++;
             }
         }
 
-       
-        int currentQuestionBoxes = 0;
-        while (currentQuestionBoxes < questionBoxes) {
+        int currentQuestion = 0;
+        while (currentQuestion < questionBoxes) {
             int x = rand.nextInt(cols);
             int y = rand.nextInt(rows);
-            String position = x + "," + y;
+            String pos = x + "," + y;
 
-            if (!usedPositions.contains(position) && cells[x][y].getSpecialBox() == SpecialBoxType.NONE) {
+            if (!usedPositions.contains(pos)
+                    && cells[x][y].getSpecialBox() == SpecialBoxType.NONE) {
+
                 cells[x][y].setSpecialBox(SpecialBoxType.QUESTION);
-                usedPositions.add(position);
-                currentQuestionBoxes++;
+                usedPositions.add(pos);
+                currentQuestion++;
             }
         }
     }
 
     
-    public void setMines() {
+    private void setMines() {
         Random rand = new Random();
         int currentMines = 0;
         List<String> usedPositions = new ArrayList<>();
@@ -93,39 +85,58 @@ public class Board {
         while (currentMines < numberOfMines) {
             int x = rand.nextInt(cols);
             int y = rand.nextInt(rows);
-            String position = x + "," + y;
+            String pos = x + "," + y;
 
             boolean hasMine = cells[x][y].getMine();
-            boolean hasSpecialBox = cells[x][y].getSpecialBox() != SpecialBoxType.NONE;
+            boolean hasSpecial = cells[x][y].getSpecialBox() != SpecialBoxType.NONE;
+            boolean nearSpecial = hasSpecialNeighbor(x, y);
 
-            if (!hasMine && !hasSpecialBox && !usedPositions.contains(position)) {
+            if (!hasMine && !hasSpecial && !nearSpecial && !usedPositions.contains(pos)) {
                 cells[x][y].setMine(true);
-            
-                usedPositions.add(position);
+                usedPositions.add(pos);
                 currentMines++;
             }
         }
     }
 
    
-   
+    private boolean hasSpecialNeighbor(int x, int y) {
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dy = -1; dy <= 1; dy++) {
+
+                int nx = x + dx;
+                int ny = y + dy;
+
+                if (nx < 0 || ny < 0 || nx >= cols || ny >= rows)
+                    continue;
+
+                SpecialBoxType s = cells[nx][ny].getSpecialBox();
+                if (s == SpecialBoxType.QUESTION || s == SpecialBoxType.SURPRISE) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
 
     
-    public void setSurroundingMinesNumber() {
+    private void setSurroundingMinesNumber() {
         for (int x = 0; x < cols; x++) {
             for (int y = 0; y < rows; y++) {
-                int calculated = calculateNeighbours(x, y);
-                cells[x][y].setSurroundingMines(calculated);
+                cells[x][y].setSurroundingMines(calculateNeighbours(x, y));
             }
         }
     }
 
-   
-    public int calculateNeighbours(int xCo, int yCo) {
+    private int calculateNeighbours(int xCo, int yCo) {
         int neighbours = 0;
 
-        for (int x = makeValidCoordinateX(xCo - 1); x <= makeValidCoordinateX(xCo + 1); x++) {
-            for (int y = makeValidCoordinateY(yCo - 1); y <= makeValidCoordinateY(yCo + 1); y++) {
+        for (int x = makeValidCoordinateX(xCo - 1);
+             x <= makeValidCoordinateX(xCo + 1); x++) {
+
+            for (int y = makeValidCoordinateY(yCo - 1);
+                 y <= makeValidCoordinateY(yCo + 1); y++) {
+
                 if (x != xCo || y != yCo) {
                     if (cells[x][y].getMine()) {
                         neighbours++;
@@ -136,44 +147,36 @@ public class Board {
         return neighbours;
     }
 
-  
+   
     public int makeValidCoordinateX(int i) {
-        if (i < 0) i = 0;
-        else if (i > cols - 1) i = cols - 1;
+        if (i < 0) return 0;
+        if (i > cols - 1) return cols - 1;
         return i;
     }
 
     public int makeValidCoordinateY(int i) {
-        if (i < 0) i = 0;
-        else if (i > rows - 1) i = rows - 1;
+        if (i < 0) return 0;
+        if (i > rows - 1) return rows - 1;
         return i;
     }
 
-    
+   
     public void resetBoard() {
         for (int x = 0; x < cols; x++) {
             for (int y = 0; y < rows; y++) {
                 cells[x][y].setContent("");
                 cells[x][y].setMine(false);
                 cells[x][y].setSpecialBox(SpecialBoxType.NONE);
-        
                 cells[x][y].setSurroundingMines(0);
             }
         }
-    
+
         setSpecialBoxes();
         setMines();
         setSurroundingMinesNumber();
     }
 
-    public void setNumberOfMines(int numberOfMines) {
-        this.numberOfMines = numberOfMines;
-    }
-
-    public int getNumberOfMines() {
-        return numberOfMines;
-    }
-
+    
     public Cell[][] getCells() {
         return cells;
     }
@@ -184,6 +187,10 @@ public class Board {
 
     public int getCols() {
         return cols;
+    }
+
+    public int getNumberOfMines() {
+        return numberOfMines;
     }
 
     public Difficulty getDifficulty() {

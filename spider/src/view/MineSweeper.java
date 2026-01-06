@@ -304,6 +304,8 @@ public class MineSweeper extends JFrame implements GameObserver {
 
         boardsContainer.add(boardCardA);
         boardsContainer.add(boardCardB);
+        installWindowCloseHandler();
+
 
         return boardsContainer;
     }
@@ -316,6 +318,8 @@ public class MineSweeper extends JFrame implements GameObserver {
             minesLeftBLabel.setText("  " + minesB);
         }
     }
+    
+
 
     private JPanel createBoardCard(String title, boolean isBoardA) {
         JPanel card = new JPanel(new BorderLayout(0, 10));
@@ -603,7 +607,6 @@ public class MineSweeper extends JFrame implements GameObserver {
     }
 
     public void setButtonListeners(Game game) {
-        addWindowListener(game);
         for (int x = 0; x < cols; x++) {
             for (int y = 0; y < rows; y++) {
                 buttonsA[x][y].addMouseListener(game);
@@ -611,6 +614,7 @@ public class MineSweeper extends JFrame implements GameObserver {
             }
         }
     }
+
 
     public JButton[][] getButtonsA() {
         return buttonsA;
@@ -880,13 +884,15 @@ public class MineSweeper extends JFrame implements GameObserver {
     }
 
     private void goToMainPage() {
-        dispose();
-
         SwingUtilities.invokeLater(() -> {
             MainPage mainPage = new MainPage();
             mainPage.setVisible(true);
+
+            // now it is safe to close the game window
+            dispose();
         });
     }
+
 
     public void showSurpriseDialog(boolean isBonus) {
         String text;
@@ -985,5 +991,71 @@ public class MineSweeper extends JFrame implements GameObserver {
             showGameOverDialog(score);
         }
     }
+    private void installWindowCloseHandler() {
+        addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override
+            public void windowClosing(java.awt.event.WindowEvent e) {
+
+                Object[] options = {"Continue", "Main Page", "Exit"};
+
+                int choice = JOptionPane.showOptionDialog(
+                        MineSweeper.this,
+                        "What would you like to do?",
+                        "Exit Game",
+                        JOptionPane.DEFAULT_OPTION,
+                        JOptionPane.QUESTION_MESSAGE,
+                        null,
+                        options,
+                        options[0]
+                );
+
+                switch (choice) {
+                    case 0 -> {
+                        // Continue → do nothing
+                    }
+                    case 1 -> {
+                        // Main Page
+                        if (game != null) {
+                            game.logQuit();  
+                        }
+                        goToMainPage();       
+                        dispose();            
+                    }
+
+                    case 2 -> {
+                        if (game != null) {
+                            game.logQuit();
+                        }
+                        System.exit(0);
+                    }
+
+                    default -> {
+                        // Dialog closed → do nothing
+                    }
+                }
+            }
+        });
+    }
+
+    @Override
+    public void onMineHit() {
+        showMineHitDialog();
+    }
+
+    @Override
+    public void onCorrectAnswer() {
+        showCorrectAnswerDialog();
+    }
+
+    @Override
+    public void onWrongAnswer() {
+        showWrongAnswerDialog();
+    }
+
+    @Override
+    public void onNoMoreQuestions() {
+        showNoMoreQuestionsDialog();
+    }
+
 
 }

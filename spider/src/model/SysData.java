@@ -417,6 +417,12 @@ public class SysData {
     }
 
     public Optional<Question> nextQuestion() {
+
+        // If there are NO questions at all → really no questions
+        if (questions.isEmpty()) {
+            return Optional.empty();
+        }
+
         QuestionDifficulty target = pickDifficultyWeighted();
 
         List<Question> candidates = findQuestionsByDifficulty(target).stream()
@@ -429,12 +435,20 @@ public class SysData {
                     .collect(Collectors.toList());
         }
 
-        if (candidates.isEmpty()) return Optional.empty();
+        // ⭐ NEW: if all questions were used → reset and reuse
+        if (candidates.isEmpty()) {
+            usedThisMatch.clear();
+            candidates = findAllQuestions();
+        }
 
-        Question q = candidates.get(ThreadLocalRandom.current().nextInt(candidates.size()));
+        Question q = candidates.get(
+                ThreadLocalRandom.current().nextInt(candidates.size())
+        );
+
         usedThisMatch.add(q.getId());
         return Optional.of(q);
     }
+
 
     public String generateNewQuestionId() {
         int i = questions.size() + 1;

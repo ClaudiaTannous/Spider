@@ -43,6 +43,8 @@ public class Game implements CellActionContext,MouseListener, ActionListener, Wi
 	private Player player1;
 	private Player player2;
 	private Player currentPlayer;
+	
+
 
 	private int sharedLives;
 	private int sharedScore;
@@ -514,7 +516,7 @@ public class Game implements CellActionContext,MouseListener, ActionListener, Wi
 
 			button.setIcon(null);
 			button.setText("USED");
-			button.setFont(new Font("Serif", Font.BOLD, 16));
+			button.setFont(new Font("Serif", Font.BOLD, 12));
 			button.setForeground(Color.BLACK);
 
 			cell.setContent("USED");
@@ -605,7 +607,7 @@ public class Game implements CellActionContext,MouseListener, ActionListener, Wi
 
 			button.setIcon(null);
 			button.setText("USED");
-			button.setFont(new Font("Serif", Font.BOLD, 16));
+			button.setFont(new Font("Serif", Font.BOLD, 12));
 			button.setForeground(Color.BLACK);
 
 			cell.setContent("USED");
@@ -665,22 +667,33 @@ public class Game implements CellActionContext,MouseListener, ActionListener, Wi
 		int b = countRemainingMines(boardB);
 		gui.updateMinesLeft(a, b);
 	}
+	public void logQuit() {
+	    if (gui != null) {
+	        gui.interruptTimer();
+	    }
+
+	    int seconds = (gui != null) ? gui.getTimePassed() : 0;
+
+	    sysData.logGameResult(
+	        currentDifficulty,
+	        player1,
+	        sharedScore,
+	        player2,
+	        sharedScore,
+	        "QUIT",
+	        seconds
+	    );
+
+	    score.save();
+	}
+
 
 	@Override
-	public void windowClosing(WindowEvent e) { // Logs a QUIT result, saves data, interrupts timer, and exits safely.
-
-		if (gui != null) {
-			gui.interruptTimer();
-		}
-
-		int seconds = (gui != null) ? gui.getTimePassed() : 0;
-
-		sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "QUIT", seconds);
-
-		score.save();
-
-		System.exit(0);
+	public void windowClosing(WindowEvent e) {
+	    logQuit();
+	    System.exit(0);
 	}
+
 
 	@Override
 	public void actionPerformed(ActionEvent e) { // Handles menu actions like starting a new game.
