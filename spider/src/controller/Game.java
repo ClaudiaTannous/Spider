@@ -43,7 +43,7 @@ public class Game implements CellActionContext,MouseListener, ActionListener, Wi
 	private Player player1;
 	private Player player2;
 	private Player currentPlayer;
-	
+	private boolean gameOver = false;
 
 
 	private int sharedLives;
@@ -207,24 +207,25 @@ public class Game implements CellActionContext,MouseListener, ActionListener, Wi
 		gui.updateStatus(sharedScore, sharedLives);
 	}
 
-	public void newGame() { // Resets the game state (players, boards, lives, score, questions, timer) and
-							// restarts the GUI for a new match.
+			public void newGame() { // Resets the game state (players, boards, lives, score, questions, timer) and
+				// restarts the GUI for a new match.
 		this.playing = false;
-
+		gameOver = false;
+		
 		if (sysData != null) {
-			sysData.resetMatchUsage();
+		sysData.resetMatchUsage();
 		}
-
+		
 		player1 = new Player(player1.getName());
 		player2 = new Player(player2.getName());
 		currentPlayer = player1;
-
+		
 		sharedLives = currentDifficulty.getLives();
 		sharedScore = 0;
-
+		
 		createBoards();
 		updateMineCounters();
-
+		
 		gui.interruptTimer();
 		gui.resetTimer();
 		gui.initGame();
@@ -232,15 +233,15 @@ public class Game implements CellActionContext,MouseListener, ActionListener, Wi
 		gui.setActiveBoard("A");
 		gui.initStatus(sharedLives);
 		gui.updateStatus(sharedScore, sharedLives);
-	}
-
-	private void endGame() { // Marks the game as not playing, reveals all mines, and saves the score state.
+		}
+			
+	void endGame() { // Marks the game as not playing, reveals all mines, and saves the score state.
 		playing = false;
 		showAll();
 		score.save();
 	}
 
-	private void convertRemainingLivesToPoints() {  // Converts remaining lives into bonus points
+	void convertRemainingLivesToPoints() {  // Converts remaining lives into bonus points
 		if (sharedLives <= 0) {
 			return;
 		}
@@ -257,49 +258,18 @@ public class Game implements CellActionContext,MouseListener, ActionListener, Wi
 	}
 
 	// Handles a win: converts lives to points, updates status, logs and shows dialog.
-	public void gameWon() {
-		// First convert remaining lives to points using the new rule
-		convertRemainingLivesToPoints();
+	public void gameLost() {
+	    if (gameOver) return;
+	    gameOver = true;
 
-		score.incCurrentStreak();
-		score.incCurrentWinningStreak();
-		score.incGamesWon();
-		score.incGamesPlayed();
-
-		gui.interruptTimer();
-		endGame();
-
-		sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "WIN",
-				gui.getTimePassed());
-
-		if (observer != null) {
-		    observer.onGameOver(true, sharedScore, gui.getTimePassed());
-		}
-
-
-		score.addTime(gui.getTimePassed(), new Date(System.currentTimeMillis()));
-		score.save();
+	    new LoseGame(this).execute();
 	}
 
-	public void gameLost() {
-		// Convert lives to points if any remain (even if unlikely)
-		convertRemainingLivesToPoints();
+	public void gameWon() {
+	    if (gameOver) return;
+	    gameOver = true;
 
-		score.incCurrentLosingStreak();
-		score.incGamesPlayed();
-
-		gui.interruptTimer();
-		endGame();
-
-		sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "LOST",
-				gui.getTimePassed());
-
-		if (observer != null) {
-		    observer.onGameOver(false, sharedScore, gui.getTimePassed());
-		}
-
-
-		score.save();
+	    new WinGame(this).execute();
 	}
 
 	 // Checks win/lose conditions and calls gameWon/gameLost accordingly.
@@ -1284,5 +1254,50 @@ public class Game implements CellActionContext,MouseListener, ActionListener, Wi
 	    switchTurn();
 	}
 	
+	
+	public SysData getSysData() {
+	    return sysData;
+	}
+
+	public MineSweeper getGui() {
+	    return gui;
+	}
+
+	public Difficulty getDifficulty() {
+	    return currentDifficulty;
+	}
+
+	public Player getPlayer1() {
+	    return player1;
+	}
+
+	public Player getPlayer2() {
+	    return player2;
+	}
+
+	public int getSharedScore() {
+	    return sharedScore;
+	}
+	
+	
+	
+	public void goToMainMenu() {
+	    // Stop the timer safely
+	    gui.interruptTimer();
+
+	    // Reset game state
+	    gameOver = true;
+
+	    // Switch back to main menu UI
+	    gui.goToMainPage();
+	}
+	
+  public boolean isGameOver() {
+	    return gameOver;
+	}
+
+	public void setGameOver(boolean gameOver) {
+	    this.gameOver = gameOver;
+	}
 
 }

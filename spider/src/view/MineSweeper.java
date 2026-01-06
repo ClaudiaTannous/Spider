@@ -883,7 +883,7 @@ public class MineSweeper extends JFrame implements GameObserver {
         }
     }
 
-    private void goToMainPage() {
+    public void goToMainPage() {
         SwingUtilities.invokeLater(() -> {
             MainPage mainPage = new MainPage();
             mainPage.setVisible(true);
