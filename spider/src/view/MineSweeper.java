@@ -978,19 +978,7 @@ public class MineSweeper extends JFrame implements GameObserver {
         updateStatus(score, lives);
     }
 
-    @Override
-    public void onTurnChanged(String activeBoard) {
-        setActiveBoard(activeBoard);
-    }
-
-    @Override
-    public void onGameOver(boolean win, int score, int time) {
-        if (win) {
-            showVictoryDialog(score, time);
-        } else {
-            showGameOverDialog(score);
-        }
-    }
+  
     private void installWindowCloseHandler() {
         addWindowListener(new java.awt.event.WindowAdapter() {
             @Override
@@ -1037,25 +1025,7 @@ public class MineSweeper extends JFrame implements GameObserver {
         });
     }
 
-    @Override
-    public void onMineHit() {
-        showMineHitDialog();
-    }
-
-    @Override
-    public void onCorrectAnswer() {
-        showCorrectAnswerDialog();
-    }
-
-    @Override
-    public void onWrongAnswer() {
-        showWrongAnswerDialog();
-    }
-
-    @Override
-    public void onNoMoreQuestions() {
-        showNoMoreQuestionsDialog();
-    }
+  
 
 
 }
