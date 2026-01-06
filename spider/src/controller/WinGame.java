@@ -57,8 +57,8 @@ public class WinGame extends EndGameTemplate {
             );
 
             switch (choice) {
-                case 0 -> game.goToMainMenu(); // Main Page
-                default -> System.exit(0);    // Exit OR ❌
+                case 0 -> game.goToMainMenu(); 
+                default -> System.exit(0);   
             }
         });
     }

@@ -10,6 +10,16 @@ import java.util.stream.Collectors;
 
 public class SysData {
 
+    private static SysData instance;
+
+    public static synchronized SysData getInstance() {
+        if (instance == null) {
+            instance = new SysData();
+        }
+        return instance;
+    }
+
+
     // ------------------ FILE NAMES ------------------ //
 
     private static final String QUESTIONS_CSV_FILE_NAME = "EX_Question Template.csv";
