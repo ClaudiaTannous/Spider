@@ -35,8 +35,6 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	private BoardFactory boardFactory;
 	private GameObserver observer;
 
-
-
 	private Board boardA;
 	private Board boardB;
 	private boolean flagMode = false;
@@ -44,6 +42,8 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	private Player player2;
 	private Player currentPlayer;
 	private boolean gameOver = false;
+	private boolean mineHintUsed = false;
+	private boolean openMineUsed = false;
 
 
 	private int sharedLives;
@@ -64,25 +64,20 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		score = new Score();
 		score.populate();
 
-		
-
 		this.currentDifficulty = difficulty;
 		this.sysData = new SysData();
 		this.sharedScore = 0;
-		
 
 		this.playing = false;
 		this.boardFactory = switch (difficulty) {
-	    case EASY -> new EasyBoardFactory();
-	    case MEDIUM -> new MediumBoardFactory();
-	    case HARD -> new HardBoardFactory();
-	};
-
+		case EASY -> new EasyBoardFactory();
+		case MEDIUM -> new MediumBoardFactory();
+		case HARD -> new HardBoardFactory();
+		};
 
 		initializePlayers(player1Name, player2Name);
 		createBoards();
 		updateMineCounters();
-		
 
 		gui.initGame();
 		gui.setMines(currentDifficulty.getMines());
@@ -95,10 +90,10 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		gui.hideAll();
 
 	}
-	public void setObserver(GameObserver observer) {
-	    this.observer = observer;
-	}
 
+	public void setObserver(GameObserver observer) {
+		this.observer = observer;
+	}
 
 	private int getActivationCost(Difficulty diff) {
 		return switch (diff) {
@@ -150,11 +145,10 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	}
 
 	public void createBoards() {
-	    boardA = boardFactory.createBoard();
-	    boardB = boardFactory.createBoard();
-	    gui.setMines(currentDifficulty.getMines());
+		boardA = boardFactory.createBoard();
+		boardB = boardFactory.createBoard();
+		gui.setMines(currentDifficulty.getMines());
 	}
-
 
 	// Enables or disables flag mode
 	public void setFlagMode(boolean flagMode) {
@@ -173,7 +167,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		return flagMode;
 	}
 
-	 // Handles placing/removing a flag on a given cell while in flag mode.
+	// Handles placing/removing a flag on a given cell while in flag mode.
 	private void handleFlagClick(int x, int y, Board board, JButton button) {
 		Cell cell = board.getCells()[x][y];
 		String content = cell.getContent();
@@ -207,41 +201,173 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		gui.updateStatus(sharedScore, sharedLives);
 	}
 
-			public void newGame() { // Resets the game state (players, boards, lives, score, questions, timer) and
-				// restarts the GUI for a new match.
-		this.playing = false;
-		gameOver = false;
-		
-		if (sysData != null) {
-		sysData.resetMatchUsage();
-		}
-		
-		player1 = new Player(player1.getName());
-		player2 = new Player(player2.getName());
-		currentPlayer = player1;
-		
-		sharedLives = currentDifficulty.getLives();
-		sharedScore = 0;
-		
-		createBoards();
-		updateMineCounters();
-		
-		gui.interruptTimer();
-		gui.resetTimer();
-		gui.initGame();
-		gui.setMines(currentDifficulty.getMines());
-		gui.setActiveBoard("A");
-		gui.initStatus(sharedLives);
-		gui.updateStatus(sharedScore, sharedLives);
-		}
-			
+	public void newGame() {
+	    this.playing = false;
+	    gameOver = false;
+
+	   
+	    mineHintUsed = false;
+	    if (gui != null) {
+	        gui.setHintEnabled(true);
+	    }
+
+	   
+	    openMineUsed = false;
+	    if (gui != null) {
+	        gui.setOpenMineEnabled(true);
+	    }
+
+	    if (sysData != null) {
+	        sysData.resetMatchUsage();
+	    }
+
+	    player1 = new Player(player1.getName());
+	    player2 = new Player(player2.getName());
+	    currentPlayer = player1;
+
+	    sharedLives = currentDifficulty.getLives();
+	    sharedScore = 0;
+
+	    createBoards();
+	    updateMineCounters();
+
+	    gui.interruptTimer();
+	    gui.resetTimer();
+	    gui.initGame();
+	    gui.setMines(currentDifficulty.getMines());
+	    gui.setActiveBoard("A");
+	    gui.initStatus(sharedLives);
+	    gui.updateStatus(sharedScore, sharedLives);
+	}
+
+
 	void endGame() { // Marks the game as not playing, reveals all mines, and saves the score state.
 		playing = false;
 		showAll();
 		score.save();
 	}
 
-	void convertRemainingLivesToPoints() {  // Converts remaining lives into bonus points
+	public void useMineHint() {
+	    if (mineHintUsed) return;
+
+	    mineHintUsed = true;
+	    if (gui != null) gui.setHintEnabled(false);
+
+	    String boardTag = gui.getActiveBoard();
+	    Board board = "A".equals(boardTag) ? boardA : boardB;
+
+	    int[] pos = findHiddenMine(board);
+
+	    if (pos == null) {
+	        JOptionPane.showMessageDialog(gui, "No hidden mines left to hint.", "Hint",
+	                JOptionPane.INFORMATION_MESSAGE);
+	        return;
+	    }
+
+	    int x = pos[0];
+	    int y = pos[1];
+
+	    // ✅ highlight first
+	    gui.circleCell(boardTag, x, y);
+
+	    // ✅ let Swing paint the highlight BEFORE opening a modal dialog
+	    new javax.swing.Timer(120, e -> {
+	        JOptionPane.showMessageDialog(gui, "A mine has been highlighted on your board.", "Hint Used",
+	                JOptionPane.INFORMATION_MESSAGE);
+	        ((javax.swing.Timer) e.getSource()).stop();
+	    }).start();
+	}
+
+	private int[] findHiddenMine(Board board) {
+
+		Cell[][] cells = board.getCells();
+
+		for (int x = 0; x < board.getCols(); x++) {
+			for (int y = 0; y < board.getRows(); y++) {
+
+				Cell cell = cells[x][y];
+				String content = cell.getContent();
+				if (content == null)
+					content = "";
+
+				// hidden mine = not revealed, not flagged
+				if (cell.getMine() && content.equals("")) {
+					return new int[] { x, y };
+				}
+			}
+		}
+		return null;
+	}
+
+	private void handleHeartBox(int x, int y, Board board, JButton button) {
+		Cell cell = board.getCells()[x][y];
+		String content = cell.getContent();
+		if (content == null)
+			content = "";
+
+		// FIRST CLICK – reveal only, +1 point (like other specials)
+		if (content.equals("")) {
+			button.setBackground(new Color(255, 210, 220)); // soft pink (change if you want)
+			button.setIcon(null);
+			button.setText("♥");
+			button.setFont(new Font("Segoe UI", Font.BOLD, 18));
+			button.setForeground(new Color(180, 0, 60));
+
+			cell.setContent("♥");
+
+			sharedScore += 1;
+			gui.updateStatus(sharedScore, sharedLives);
+			return;
+		}
+
+		// Already used → nothing
+		if (content.equals("USED"))
+			return;
+
+		// SECOND CLICK – activation
+		if (content.equals("♥")) {
+			int choice = JOptionPane.showConfirmDialog(gui,
+					"Do you want to activate the heart?\n(Activation will cost " + getActivationCost() + " points.)",
+					"Activate Heart?", JOptionPane.YES_NO_OPTION);
+
+			if (choice != JOptionPane.YES_OPTION) {
+				return; // no changes if user says NO
+			}
+
+			int activationCost = getActivationCost();
+			sharedScore -= activationCost;
+
+			if (sharedLives < getMaxLives()) {
+				sharedLives += 1;
+				JOptionPane.showMessageDialog(gui, "❤️ Heart activated!\n+1 life.\nLives: " + sharedLives, "Heart Box",
+						JOptionPane.INFORMATION_MESSAGE);
+			} else {
+				sharedScore += 5; // compensate if already max
+				JOptionPane.showMessageDialog(gui,
+						"❤️ You already have max lives (" + getMaxLives() + ").\n+5 points instead!", "Heart Box",
+						JOptionPane.INFORMATION_MESSAGE);
+			}
+
+			clampLives();
+
+			button.setIcon(null);
+			button.setText("USED");
+			button.setFont(new Font("Serif", Font.BOLD, 12));
+			button.setForeground(Color.BLACK);
+			button.setBackground(new Color(167, 214, 167)); // same “used/green” vibe
+
+			cell.setContent("USED");
+			cell.setSpecialBox(SpecialBoxType.NONE);
+
+			gui.updateStatus(sharedScore, sharedLives);
+
+			if (sharedLives <= 0) {
+				gameLost();
+			}
+		}
+	}
+
+	void convertRemainingLivesToPoints() { // Converts remaining lives into bonus points
 		if (sharedLives <= 0) {
 			return;
 		}
@@ -257,25 +383,37 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		}
 	}
 
-	// Handles a win: converts lives to points, updates status, logs and shows dialog.
+	// Handles a win: converts lives to points, updates status, logs and shows
+	// dialog.
 	public void gameLost() {
-	    if (gameOver) return;
-	    gameOver = true;
+		if (gameOver)
+			return;
+		gameOver = true;
+		playing = false; 
+		if(gui!=null) {
+			gui.stopTimerUI(); 
+		}
 
-	    new LoseGame(this).execute();
+		new LoseGame(this).execute();
 	}
 
 	public void gameWon() {
-	    if (gameOver) return;
-	    gameOver = true;
+		if (gameOver)
+			return;
+		gameOver = true;
+		playing = false; 
+		if(gui!=null) {
+			gui.stopTimerUI(); 
+		}
 
-	    new WinGame(this).execute();
+		new WinGame(this).execute();
 	}
 
-	 // Checks win/lose conditions and calls gameWon/gameLost accordingly.
+	// Checks win/lose conditions and calls gameWon/gameLost accordingly.
 	private void checkGame() {
-	    if (!playing) return;   // if the game is no longer active, skip further win/lose checks
-	                           // This prevents multiple end-game dialogs from being shown
+		if (!playing)
+			return; // if the game is no longer active, skip further win/lose checks
+					// This prevents multiple end-game dialogs from being shown
 		boolean aDone = checkWinCondition(boardA);
 		boolean bDone = checkWinCondition(boardB);
 
@@ -312,116 +450,127 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 		return true;
 	}
+
 	private void findZeroes(int x, int y, Board board, JButton[][] buttons) {
-	    boolean[][] visited = new boolean[board.getCols()][board.getRows()];
-	    findZeroes(x, y, board, buttons, visited);
+		boolean[][] visited = new boolean[board.getCols()][board.getRows()];
+		findZeroes(x, y, board, buttons, visited);
 	}
 
+	private void findZeroes(int x, int y, Board board, JButton[][] buttons, boolean[][] visited) {
+		// אם כבר ביקרנו כאן – עוצרים
+		if (visited[x][y])
+			return;
+		visited[x][y] = true;
 
-	private void findZeroes(
-	        int x,
-	        int y,
-	        Board board,
-	        JButton[][] buttons,
-	        boolean[][] visited
-	) {
-	    // אם כבר ביקרנו כאן – עוצרים
-	    if (visited[x][y]) return;
-	    visited[x][y] = true;
+		Cell[][] cells = board.getCells();
 
-	    Cell[][] cells = board.getCells();
+		for (int tempX = board.makeValidCoordinateX(x - 1); tempX <= board.makeValidCoordinateX(x + 1); tempX++) {
 
-	    for (int tempX = board.makeValidCoordinateX(x - 1);
-	         tempX <= board.makeValidCoordinateX(x + 1);
-	         tempX++) {
+			for (int tempY = board.makeValidCoordinateY(y - 1); tempY <= board.makeValidCoordinateY(y + 1); tempY++) {
 
-	        for (int tempY = board.makeValidCoordinateY(y - 1);
-	             tempY <= board.makeValidCoordinateY(y + 1);
-	             tempY++) {
+				if (tempX == x && tempY == y)
+					continue;
 
-	            if (tempX == x && tempY == y)
-	                continue;
+				Cell cell = cells[tempX][tempY];
+				JButton btn = buttons[tempX][tempY];
 
-	            Cell cell = cells[tempX][tempY];
-	            JButton btn = buttons[tempX][tempY];
+				String content = cell.getContent();
+				if (content == null)
+					content = "";
 
-	            String content = cell.getContent();
-	            if (content == null) content = "";
+				if (cell.getMine())
+					continue;
 
-	            // מוקש – לא ממשיכים
-	            if (cell.getMine())
-	                continue;
+				if (!content.equals("") && !content.equals("❓"))
+					continue;
 
-	            // אם התא כבר נפתח כמספר או USED – לא ממשיכים
-	            if (!content.equals("") && !content.equals("❓"))
-	                continue;
+				SpecialBoxType special = cell.getSpecialBox();
 
-	            SpecialBoxType special = cell.getSpecialBox();
+				if (special == SpecialBoxType.SURPRISE && content.equals("")) {
+					cell.setContent("🎁");
+					btn.setIcon(null);
+					btn.setText("🎁");
+					btn.setFont(new Font("Serif", Font.BOLD, 18));
+					btn.setForeground(new Color(30, 30, 30));
+					btn.setBackground(gui.S_HIGHLIGHT);
+					findZeroes(tempX, tempY, board, buttons, visited);
+					continue;
+				}
 
-	            // 🎁 Surprise – נחשף אבל לא ממשיך קסקדה
-	            if (special == SpecialBoxType.SURPRISE && content.equals("")) {
-	                cell.setContent("🎁");
-	                btn.setIcon(null);
-	                btn.setText("🎁");
-	                btn.setFont(new Font("Serif", Font.BOLD, 18));
-	                btn.setForeground(new Color(30, 30, 30));
-	                btn.setBackground(gui.S_HIGHLIGHT);
-	                findZeroes(tempX, tempY, board, buttons, visited);
-	                continue;
-	            }
+				if (special == SpecialBoxType.QUESTION) {
+					if (!content.equals("❓")) {
+						cell.setContent("❓");
+						btn.setIcon(null);
+						btn.setText("❓");
+						btn.setFont(new Font("Serif", Font.BOLD, 18));
+						btn.setForeground(new Color(30, 30, 30));
+						btn.setBackground(gui.Q_HIGHLIGHT);
+					}
 
-	            // ❓ Question – מתנהג כמו תא ריק וממשיך קסקדה
-	            if (special == SpecialBoxType.QUESTION) {
-	                if (!content.equals("❓")) {
-	                    cell.setContent("❓");
-	                    btn.setIcon(null);
-	                    btn.setText("❓");
-	                    btn.setFont(new Font("Serif", Font.BOLD, 18));
-	                    btn.setForeground(new Color(30, 30, 30));
-	                    btn.setBackground(gui.Q_HIGHLIGHT);
-	                }
+					findZeroes(tempX, tempY, board, buttons, visited);
+					continue;
+				}
+				// ❤️ Heart – reveal but allow activation later (like other specials)
+				if (special == SpecialBoxType.HEART && content.equals("")) {
+					cell.setContent("♥");
+					btn.setIcon(null);
+					btn.setText("♥");
+					btn.setFont(new Font("Segoe UI", Font.BOLD, 18));
+					btn.setForeground(new Color(180, 0, 60));
+					btn.setBackground(new Color(255, 210, 220));
 
-	                // ממשיכים קסקדה דרך השאלה
-	                findZeroes(tempX, tempY, board, buttons, visited);
-	                continue;
-	            }
+					findZeroes(tempX, tempY, board, buttons, visited);
+					continue;
+				}
+				// 🎲 Dice – reveal but allow activation later (like other specials)
+				if (special == SpecialBoxType.DICE && content.equals("")) {
+				    cell.setContent("🎲");
+				    btn.setIcon(null);
+				    btn.setText("🎲");
+				    btn.setFont(new Font("Segoe UI Emoji", Font.BOLD, 18));
+				    btn.setForeground(new Color(30, 30, 30));
+				    btn.setBackground(new Color(230, 230, 230));
 
-	            // תא רגיל
-	            int neighbours = cell.getSurroundingMines();
-	            cell.setContent(Integer.toString(neighbours));
-	            btn.setBackground(gui.CELL_REVEALED);
-
-	            if (neighbours == 0) {
-	                btn.setText("·");
-	                btn.setForeground(new Color(160, 170, 200, 100));
-	                btn.setFont(new Font("Arial", Font.BOLD, 24));
-
-	                findZeroes(tempX, tempY, board, buttons, visited);
-	            } else {
-	                btn.setText(Integer.toString(neighbours));
-	                gui.setTextColor(btn);
-	            }
-	        }
-	    }
-	}
+				    findZeroes(tempX, tempY, board, buttons, visited);
+				    continue;
+				}
 
 
-	  // Reveals all cells on both boards using GUI helper methods.
-	 private void showAll() {
-	        gui.revealAllBoard(boardA, gui.getButtonsA());
-	        gui.revealAllBoard(boardB, gui.getButtonsB());
-	    }
-	 private void switchTurn() { // Alternates current player and updates GUI to highlight the active board.
-			currentPlayer = (currentPlayer == player1) ? player2 : player1;
-			String newBoard = (currentPlayer == player1) ? "A" : "B";
-			gui.setActiveBoard(newBoard);
-			if (observer != null) {
-			    observer.onStatusChanged(sharedScore, sharedLives);
+				int neighbours = cell.getSurroundingMines();
+				cell.setContent(Integer.toString(neighbours));
+				btn.setBackground(gui.CELL_REVEALED);
+
+				if (neighbours == 0) {
+					btn.setText("·");
+					btn.setForeground(new Color(160, 170, 200, 100));
+					btn.setFont(new Font("Arial", Font.BOLD, 24));
+
+					findZeroes(tempX, tempY, board, buttons, visited);
+				} else {
+					btn.setText(Integer.toString(neighbours));
+					gui.setTextColor(btn);
+				}
 			}
 		}
+	}
 
+	// Reveals all cells on both boards using GUI helper methods.
+	private void showAll() {
+		gui.revealAllBoard(boardA, gui.getButtonsA());
+		gui.revealAllBoard(boardB, gui.getButtonsB());
+	}
 
-	private void handleSurpriseBox(int x, int y, Board board, JButton button) {  // Handles clicks on a surprise box and applies random effect.
+	private void switchTurn() { // Alternates current player and updates GUI to highlight the active board.
+		currentPlayer = (currentPlayer == player1) ? player2 : player1;
+		String newBoard = (currentPlayer == player1) ? "A" : "B";
+		gui.setActiveBoard(newBoard);
+		if (observer != null) {
+			observer.onStatusChanged(sharedScore, sharedLives);
+		}
+	}
+
+	private void handleSurpriseBox(int x, int y, Board board, JButton button) { // Handles clicks on a surprise box and
+																				// applies random effect.
 		Cell cell = board.getCells()[x][y];
 		String content = cell.getContent();
 
@@ -437,7 +586,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 			sharedScore += 1;
 			if (observer != null) {
-			    observer.onStatusChanged(sharedScore, sharedLives);
+				observer.onStatusChanged(sharedScore, sharedLives);
 			}
 
 			return;
@@ -470,11 +619,11 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 			if (isBonus) {
 				deltaPts += surprisePts; // +8 / +12 / +16
 				deltaLives = +1;
-				button.setBackground(new Color(167, 214, 167)); 
+				button.setBackground(new Color(167, 214, 167));
 			} else {
 				deltaPts -= surprisePts; // -8 / -12 / -16
 				deltaLives = -1;
-				button.setBackground(new Color(167, 214, 167)); 
+				button.setBackground(new Color(167, 214, 167));
 			}
 
 			sharedScore += deltaPts;
@@ -495,7 +644,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 			StringBuilder msg = new StringBuilder();
 			msg.append("Surprise box result:\n\n");
 			msg.append("Activation cost: -").append(activationCost).append(" pts\n");
-			int effectPts = deltaPts + activationCost; 
+			int effectPts = deltaPts + activationCost;
 			msg.append("Surprise effect points: ").append(effectPts >= 0 ? "+" : "").append(effectPts).append(" pts");
 
 			if (deltaLives != 0) {
@@ -513,8 +662,70 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 			}
 		}
 	}
+	private void handleDiceBox(int x, int y, Board board, JButton button) {
 
-	private void handleQuestionBox(int x, int y, Board board, JButton button) {  // Handles clicks on a question box and applies question outcome.
+	    Cell cell = board.getCells()[x][y];
+	    String content = cell.getContent();
+	    if (content == null) content = "";
+
+	    // already consumed
+	    if ("USED".equals(content)) return;
+
+	    // 1st click: reveal the dice (same behavior as Q/S/Heart reveal)
+	    if (content.equals("")) {
+	        button.setIcon(null);
+	        button.setText("🎲");
+	        button.setFont(new Font("Segoe UI Emoji", Font.BOLD, 18));
+	        button.setForeground(new Color(30, 30, 30));
+	        button.setBackground(new Color(230, 230, 230));
+	        button.setBorder(new LineBorder(new Color(170, 170, 170), 2, true));
+
+	        cell.setContent("🎲");
+
+	        sharedScore += 1;
+	        gui.updateStatus(sharedScore, sharedLives);
+	        return;
+	    }
+
+	    // 2nd click: open a custom popup from the VIEW (vertical buttons)
+	    if (content.equals("🎲")) {
+
+	        // ✅ this is the method you add in MineSweeper (view)
+	        // returns: 0=Heart, 1=Question, 2=Surprise, 3=Cancel, -1=closed
+	        int choice = gui.showDiceChoiceDialog();
+
+	        if (choice == -1 || choice == 3) return;
+
+	        if (choice == 0) {
+	            cell.setSpecialBox(SpecialBoxType.HEART);
+	            cell.setContent("♥");
+	            button.setText("♥");
+	            // optional: style like heart immediately (or let handleHeartBox do it)
+	            handleHeartBox(x, y, board, button);
+	            return;
+	        }
+
+	        if (choice == 1) {
+	            cell.setSpecialBox(SpecialBoxType.QUESTION);
+	            cell.setContent("❓");
+	            button.setText("❓");
+	            handleQuestionBox(x, y, board, button);
+	            return;
+	        }
+
+	        if (choice == 2) {
+	            cell.setSpecialBox(SpecialBoxType.SURPRISE);
+	            cell.setContent("🎁");
+	            button.setText("🎁");
+	            handleSurpriseBox(x, y, board, button);
+	        }
+	    }
+	}
+
+
+
+	private void handleQuestionBox(int x, int y, Board board, JButton button) { // Handles clicks on a question box and
+																				// applies question outcome.
 		Cell cell = board.getCells()[x][y];
 		String content = cell.getContent();
 
@@ -531,7 +742,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 			sharedScore += 1;
 			gui.updateStatus(sharedScore, sharedLives);
 
-			//expand empty neighbors like normal empty cell
+			// expand empty neighbors like normal empty cell
 			findZeroes(x, y, board, (board == boardA ? gui.getButtonsA() : gui.getButtonsB()));
 
 			return;
@@ -568,7 +779,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 				button.setBackground(new Color(167, 214, 167));
 				gui.showCorrectAnswerDialog();
 			} else {
-				button.setBackground(new Color(167, 214, 167)); 
+				button.setBackground(new Color(167, 214, 167));
 				gui.showWrongAnswerDialog();
 			}
 
@@ -623,44 +834,34 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		}
 		return count;
 	}
-	
-	private int getMaxLives() {
-	    return 10;
-	}
 
+	private int getMaxLives() {
+		return 10;
+	}
 
 	private void updateMineCounters() { // Updates displayed mine counters for both boards.
 		int a = countRemainingMines(boardA);
 		int b = countRemainingMines(boardB);
 		gui.updateMinesLeft(a, b);
 	}
+
 	public void logQuit() {
-	    if (gui != null) {
-	        gui.interruptTimer();
-	    }
+		if (gui != null) {
+			gui.interruptTimer();
+		}
 
-	    int seconds = (gui != null) ? gui.getTimePassed() : 0;
+		int seconds = (gui != null) ? gui.getTimePassed() : 0;
 
-	    sysData.logGameResult(
-	        currentDifficulty,
-	        player1,
-	        sharedScore,
-	        player2,
-	        sharedScore,
-	        "QUIT",
-	        seconds
-	    );
+		sysData.logGameResult(currentDifficulty, player1, sharedScore, player2, sharedScore, "QUIT", seconds);
 
-	    score.save();
+		score.save();
 	}
-
 
 	@Override
 	public void windowClosing(WindowEvent e) {
-	    logQuit();
-	    System.exit(0);
+		logQuit();
+		System.exit(0);
 	}
-
 
 	@Override
 	public void actionPerformed(ActionEvent e) { // Handles menu actions like starting a new game.
@@ -697,7 +898,8 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		gui.updateStatus(sharedScore, sharedLives);
 	}
 
-	private void evaluateFlagsOnBoard(Board board, JButton[][] buttons) {  // Evaluates all flags on a single board and marks correct/incorrect flags.
+	private void evaluateFlagsOnBoard(Board board, JButton[][] buttons) { // Evaluates all flags on a single board and
+																			// marks correct/incorrect flags.
 		Cell[][] cells = board.getCells();
 
 		for (int x = 0; x < board.getCols(); x++) {
@@ -705,7 +907,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 				Cell cell = cells[x][y];
 				JButton button = buttons[x][y];
 
-				 // Only cells that are still flagged
+				// Only cells that are still flagged
 				if (!"F".equals(cell.getContent())) {
 					continue;
 				}
@@ -716,10 +918,10 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 				}
 
 				if (cell.getMine()) {
-					 // Correct flag on a mine (+1 and reveal)
+					// Correct flag on a mine (+1 and reveal)
 					sharedScore += 1;
 
-					cell.setContent("M");  
+					cell.setContent("M");
 					button.setIcon(gui.getIconRedMine());
 					button.setText("");
 					button.setBackground(new Color(183, 28, 28));
@@ -733,128 +935,147 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 		}
 	}
 
-	public void mouseClicked(MouseEvent e) {  // Handles all mouse clicks on cells (flags, specials, mines, normal cells).
+	public void mouseClicked(MouseEvent e) { // Handles all mouse clicks on cells (flags, specials, mines, normal cells).
 
-		if (!playing) {
-			gui.startTimer();
-			playing = true;
-		}
-		if (!playing)
-			return;
+	    if (!playing) {
+	        gui.startTimer();
+	        playing = true;
+	    }
+	    if (!playing) return;
 
-		JButton button = (JButton) e.getSource();
-		String boardTag = (String) button.getClientProperty("board");
+	    JButton button = (JButton) e.getSource();
+	    String boardTag = (String) button.getClientProperty("board");
 
-		if (!boardTag.equals(gui.getActiveBoard()))
-			return;
+	    if (!boardTag.equals(gui.getActiveBoard()))
+	        return;
 
-		Board board = boardTag.equals("A") ? boardA : boardB;
-		JButton[][] buttons = boardTag.equals("A") ? gui.getButtonsA() : gui.getButtonsB();
+	    Board board = boardTag.equals("A") ? boardA : boardB;
+	    JButton[][] buttons = boardTag.equals("A") ? gui.getButtonsA() : gui.getButtonsB();
 
-		String[] parts = button.getName().split(":");
-		if (parts.length < 2)
-			return;
+	    String[] parts = button.getName().split(":");
+	    if (parts.length < 2) return;
 
-		String[] co = parts[1].split(",");
-		int x = Integer.parseInt(co[0]);
-		int y = Integer.parseInt(co[1]);
+	    String[] co = parts[1].split(",");
+	    int x = Integer.parseInt(co[0]);
+	    int y = Integer.parseInt(co[1]);
 
-		Cell cell = board.getCells()[x][y];
-		String content = cell.getContent();
-		if (content == null)
-			content = "";
+	    Cell cell = board.getCells()[x][y];
+	    String content = cell.getContent();
+	    if (content == null) content = "";
 
-		SpecialBoxType specialBox = cell.getSpecialBox();
+	    SpecialBoxType specialBox = cell.getSpecialBox();
 
-		boolean isLeft = SwingUtilities.isLeftMouseButton(e);
-		if (!isLeft)
-			return;
+	    boolean isLeft = SwingUtilities.isLeftMouseButton(e);
+	    if (!isLeft) return;
 
-		// -------- FLAG MODE --------
-		if (flagMode) {
-			handleFlagClick(x, y, board, button);
+	    // -------- FLAG MODE --------
+	    if (flagMode) {
+	        handleFlagClick(x, y, board, button);
+	        return;
+	    }
 
-			return;
-		}
+	    // ignore click on a flagged cell
+	    if (content.equals("F"))
+	        return;
 
-		// ignore click on a flagged cell
-		if (content.equals("F"))
-			return;
+	    boolean isMine = cell.getMine();
+	    int neighbours = cell.getSurroundingMines();
 
-		boolean isMine = cell.getMine();
-		int neighbours = cell.getSurroundingMines();
+	    // If this is a mine that is already revealed ("M"), ignore click
+	    if (isMine && "M".equals(content)) {
+	        return;
+	    }
 
-		// ⭐ FIX: if this is a mine that is already revealed ("M"), ignore click
-		if (isMine && "M".equals(content)) {
-			return;
-		}
+	    // only clear icon if this is NOT an already-revealed mine
+	    if (!"M".equals(content)) {
+	        button.setIcon(null);
+	    }
 
-		// ⭐ FIX: only clear icon if this is NOT an already-revealed mine
-		if (!"M".equals(content)) {
-			button.setIcon(null);
-		}
+	    // if cell already has content (number, USED, etc.) – only allow clicking special boxes
+	    if (!content.equals("")) {
+	        boolean isClickableSpecial =
+	                (specialBox == SpecialBoxType.SURPRISE && content.equals("🎁")) ||
+	                (specialBox == SpecialBoxType.QUESTION && content.equals("❓")) ||
+	                (specialBox == SpecialBoxType.HEART   && content.equals("♥"))  ||
+	                (specialBox == SpecialBoxType.DICE    && content.equals("🎲"));  // ✅ NEW
 
-		// if cell already has content (number, USED, etc.) – only allow clicking
-		// special boxes
-		if (!content.equals("")) {
-			boolean isClickableSpecial = (specialBox == SpecialBoxType.SURPRISE && content.equals("🎁"))
-					|| (specialBox == SpecialBoxType.QUESTION && content.equals("❓"));
+	        if (!isClickableSpecial)
+	            return;
+	    }
 
-			if (!isClickableSpecial)
-				return;
-		}
+	    // -------- SPECIAL BOXES / MINES / NORMAL CELLS --------
+	    if (specialBox == SpecialBoxType.SURPRISE) {
 
-		// -------- SPECIAL BOXES / MINES / NORMAL CELLS --------
-		if (specialBox == SpecialBoxType.SURPRISE) {
+	        String before = cell.getContent();
+	        handleSurpriseBox(x, y, board, button);
+	        String after = cell.getContent();
 
-			String before = cell.getContent();
-			handleSurpriseBox(x, y, board, button);
-			String after = cell.getContent();
+	        if (before.equals("") || "USED".equals(after))
+	            switchTurn();
 
-			if (before.equals("") || "USED".equals(after))
-				switchTurn();
+	    } else if (specialBox == SpecialBoxType.QUESTION) {
 
-		} else if (specialBox == SpecialBoxType.QUESTION) {
+	        String before = cell.getContent();
+	        handleQuestionBox(x, y, board, button);
+	        String after = cell.getContent();
 
-			String before = cell.getContent();
-			handleQuestionBox(x, y, board, button);
-			String after = cell.getContent();
+	        if (before.equals("") || "USED".equals(after))
+	            switchTurn();
 
-			if (before.equals("") || "USED".equals(after))
-				switchTurn();
+	    } else if (specialBox == SpecialBoxType.HEART) {
 
-		} else if (isMine) {
-			// first-time click on hidden mine
-			handleMineClick(x, y, board, button);
+	        String before = cell.getContent();
+	        handleHeartBox(x, y, board, button);
+	        String after = cell.getContent();
 
-		} else {
-			// safe cell
-			sharedScore += 1;
-			gui.updateStatus(sharedScore, sharedLives);
+	        if (before.equals("") || "USED".equals(after))
+	            switchTurn();
 
-			cell.setContent(Integer.toString(neighbours));
-			button.setBackground(gui.CELL_REVEALED);
+	    } else if (specialBox == SpecialBoxType.DICE) { // ✅ NEW
 
-			if (neighbours == 0) {
-				button.setText("·");
-				button.setForeground(new Color(160, 170, 200, 100));
-				button.setFont(new Font("Arial", Font.BOLD, 24));
+	        String before = cell.getContent();
+	        handleDiceBox(x, y, board, button);
+	        String after = cell.getContent();
 
-				findZeroes(x, y, board, buttons);
-			} else {
-				button.setText(Integer.toString(neighbours));
-				gui.setTextColor(button);
-			}
+	        // Same logic as others:
+	        // - first reveal: "" -> "🎲"  => switch turn
+	        // - after activation -> "USED" => switch turn
+	        if (before.equals("") || "USED".equals(after))
+	            switchTurn();
 
-			switchTurn();
-		}
+	    } else if (isMine) {
 
-		updateMineCounters();
-		checkGame();
+	        handleMineClick(x, y, board, button);
+
+	    } else {
+	        // safe cell
+	        sharedScore += 1;
+	        gui.updateStatus(sharedScore, sharedLives);
+
+	        cell.setContent(Integer.toString(neighbours));
+	        button.setBackground(gui.CELL_REVEALED);
+
+	        if (neighbours == 0) {
+	            button.setText("·");
+	            button.setForeground(new Color(160, 170, 200, 100));
+	            button.setFont(new Font("Arial", Font.BOLD, 24));
+
+	            findZeroes(x, y, board, buttons);
+	        } else {
+	            button.setText(Integer.toString(neighbours));
+	            gui.setTextColor(button);
+	        }
+
+	        switchTurn();
+	    }
+
+	    updateMineCounters();
+	    checkGame();
 	}
 
 
-	 // Applies question outcome (points, lives, reveals) based on difficulty and answer.
+	// Applies question outcome (points, lives, reveals) based on difficulty and
+	// answer.
 	private void applyQuestionOutcome(Difficulty gameDiff, QuestionDifficulty qDiff, boolean correct, Board board) {
 
 		int activationCost = getActivationCost(gameDiff);
@@ -1005,7 +1226,7 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 
 		gui.updateStatus(sharedScore, sharedLives);
 
-		 // Summary message for question result
+		// Summary message for question result
 		StringBuilder msg = new StringBuilder();
 		msg.append("Question result (").append(gameDiff.name()).append(" game, ").append(qDiff.name())
 				.append(" question)\n\n");
@@ -1038,167 +1259,202 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 			gameLost();
 		}
 	}
-	 private void clampLives() { // Clamps lives between 0 and max and converts extra lives to points.
-	        int max = getMaxLives();
 
-	        if (sharedLives > max) {
-	            int extraLives = sharedLives - max;
+	private void clampLives() { // Clamps lives between 0 and max and converts extra lives to points.
+		int max = getMaxLives();
 
-	            int activationCost = getActivationCost();
+		if (sharedLives > max) {
+			int extraLives = sharedLives - max;
 
-	            int bonusPoints = extraLives * activationCost;
+			int activationCost = getActivationCost();
 
-	            sharedScore += bonusPoints;  
-	            sharedLives = max;           
+			int bonusPoints = extraLives * activationCost;
 
-	        }
+			sharedScore += bonusPoints;
+			sharedLives = max;
 
-	        if (sharedLives < 0) {
-	            sharedLives = 0;
-	        }
+		}
+
+		if (sharedLives < 0) {
+			sharedLives = 0;
+		}
+	}
+	public void openMineWithButton() {
+
+	    if (openMineUsed) return;   // ✅ only once
+
+	    openMineUsed = true;
+	    if (gui != null) {
+	        gui.setOpenMineEnabled(false);
 	    }
-	 
-	  private void revealRandomMine(Board board) { // Reveals one hidden mine on the given board (first one found).
-	        Cell[][] c = board.getCells();
-	        JButton[][] btns = (board == boardA) ? gui.getButtonsA() : gui.getButtonsB();
 
-	        for (int x = 0; x < board.getCols(); x++) {
-	            for (int y = 0; y < board.getRows(); y++) {
-	                if (c[x][y].getMine() && c[x][y].getContent().equals("")) {
+	    String boardTag = gui.getActiveBoard();
+	    Board board = boardTag.equals("A") ? boardA : boardB;
 
-	                    c[x][y].setContent("M");
-	                    JButton btn = btns[x][y];
-	                    btn.setIcon(gui.getIconRedMine());
-	                    btn.setBackground(new Color(220, 53, 69)); 
-	                    return;
-	                }
-	            }
-	        }
+	    int[] pos = findHiddenMine(board);
+	    if (pos == null) {
+	        JOptionPane.showMessageDialog(gui, "No hidden mines left to open.", "Open Mine",
+	                JOptionPane.INFORMATION_MESSAGE);
+	        return;
 	    }
-	  
-	  private void revealRandom3x3(Board board) { 
-		    int cols = board.getCols();
-		    int rows = board.getRows();
 
-		    JButton[][] btns = (board == boardA) ? gui.getButtonsA() : gui.getButtonsB();
-		    Cell[][] cells = board.getCells();
+	    // reveal one hidden mine (your existing method)
+	    revealRandomMine(board);
 
-		    int bestCenterX = -1;
-		    int bestCenterY = -1;
-		    int bestClosedCount = -1;
+	    updateMineCounters();
+	    checkGame();
+	}
 
-		    // 1) Try to find a 3x3 where ALL 9 cells are closed
-		    for (int cx = 0; cx < cols; cx++) {
-		        for (int cy = 0; cy < rows; cy++) {
+	
 
-		            int closedCount = 0;
 
-		            for (int x = Math.max(0, cx - 1); x <= Math.min(cols - 1, cx + 1); x++) {
-		                for (int y = Math.max(0, cy - 1); y <= Math.min(rows - 1, cy + 1); y++) {
+	private void revealRandomMine(Board board) { // Reveals one hidden mine on the given board (first one found).
+		Cell[][] c = board.getCells();
+		JButton[][] btns = (board == boardA) ? gui.getButtonsA() : gui.getButtonsB();
 
-		                    String content = cells[x][y].getContent();
-		                    if (content == null) content = "";
+		for (int x = 0; x < board.getCols(); x++) {
+			for (int y = 0; y < board.getRows(); y++) {
+				if (c[x][y].getMine() && c[x][y].getContent().equals("")) {
 
-		                    if (content.equals("")) {
-		                        closedCount++;
-		                    }
-		                }
-		            }
-
-		            // if the 3x3 is fully closed (9 closed cells) -> pick it immediately
-		            if (closedCount == 9) {
-		                bestCenterX = cx;
-		                bestCenterY = cy;
-		                bestClosedCount = 9;
-		                break;
-		            }
-
-		            // otherwise keep the best 3x3 (max closed cells)
-		            if (closedCount > bestClosedCount) {
-		                bestClosedCount = closedCount;
-		                bestCenterX = cx;
-		                bestCenterY = cy;
-		            }
-		        }
-
-		        if (bestClosedCount == 9) break;
-		    }
-
-		    // If bestClosedCount <= 0 => no closed cells in any 3x3, nothing to reveal
-		    if (bestClosedCount <= 0) return;
-
-		    int centerX = bestCenterX;
-		    int centerY = bestCenterY;
-
-		    // 2) Reveal as many as possible in that 3x3 (ONLY closed cells)
-		    for (int x = Math.max(0, centerX - 1); x <= Math.min(cols - 1, centerX + 1); x++) {
-		        for (int y = Math.max(0, centerY - 1); y <= Math.min(rows - 1, centerY + 1); y++) {
-
-		            Cell cell = cells[x][y];
-		            JButton btn = btns[x][y];
-
-		            String content = cell.getContent();
-		            if (content == null) content = "";
-
-		            // Only reveal cells that are still closed
-		            if (!content.equals("")) continue;
-
-		            if (cell.getMine()) {
-		            	btn.setIcon(gui.getIconRedMine());
-		            	btn.setBackground(new Color(220, 53, 69)); 
-		            	cell.setContent("M");
-		                continue;
-		            }
-
-		            int n = cell.getSurroundingMines();
-		            cell.setContent(Integer.toString(n));
-
-		            btn.setBackground(gui.CELL_REVEALED);
-		            if (n == 0) {
-		                btn.setText("·");
-		            } else {
-		                btn.setText(Integer.toString(n));
-		                gui.setTextColor(btn);
-		            }
-		        }
-		    }
+					c[x][y].setContent("M");
+					JButton btn = btns[x][y];
+					btn.setIcon(gui.getIconRedMine());
+					btn.setBackground(new Color(220, 53, 69));
+					return;
+				}
+			}
 		}
-	  private JButton getButtonForCell(Cell cell) {
-		    for (int x = 0; x < boardA.getCols(); x++) {
-		        for (int y = 0; y < boardA.getRows(); y++) {
-		            if (boardA.getCells()[x][y] == cell) {
-		                return gui.getButtonsA()[x][y];
-		            }
-		            if (boardB.getCells()[x][y] == cell) {
-		                return gui.getButtonsB()[x][y];
-		            }
-		        }
-		    }
-		    return null;
-		}
-	  private Board getBoardForCell(Cell cell) {
-		    for (int x = 0; x < boardA.getCols(); x++) {
-		        for (int y = 0; y < boardA.getRows(); y++) {
-		            if (boardA.getCells()[x][y] == cell) return boardA;
-		            if (boardB.getCells()[x][y] == cell) return boardB;
-		        }
-		    }
-		    return null;
-		}
-	  private int[] getCellCoordinates(Cell cell, Board board) {
-		    for (int x = 0; x < board.getCols(); x++) {
-		        for (int y = 0; y < board.getRows(); y++) {
-		            if (board.getCells()[x][y] == cell) {
-		                return new int[]{x, y};
-		            }
-		        }
-		    }
-		    return null;
+	}
+
+	private void revealRandom3x3(Board board) {
+		int cols = board.getCols();
+		int rows = board.getRows();
+
+		JButton[][] btns = (board == boardA) ? gui.getButtonsA() : gui.getButtonsB();
+		Cell[][] cells = board.getCells();
+
+		int bestCenterX = -1;
+		int bestCenterY = -1;
+		int bestClosedCount = -1;
+
+		// 1) Try to find a 3x3 where ALL 9 cells are closed
+		for (int cx = 0; cx < cols; cx++) {
+			for (int cy = 0; cy < rows; cy++) {
+
+				int closedCount = 0;
+
+				for (int x = Math.max(0, cx - 1); x <= Math.min(cols - 1, cx + 1); x++) {
+					for (int y = Math.max(0, cy - 1); y <= Math.min(rows - 1, cy + 1); y++) {
+
+						String content = cells[x][y].getContent();
+						if (content == null)
+							content = "";
+
+						if (content.equals("")) {
+							closedCount++;
+						}
+					}
+				}
+
+				// if the 3x3 is fully closed (9 closed cells) -> pick it immediately
+				if (closedCount == 9) {
+					bestCenterX = cx;
+					bestCenterY = cy;
+					bestClosedCount = 9;
+					break;
+				}
+
+				// otherwise keep the best 3x3 (max closed cells)
+				if (closedCount > bestClosedCount) {
+					bestClosedCount = closedCount;
+					bestCenterX = cx;
+					bestCenterY = cy;
+				}
+			}
+
+			if (bestClosedCount == 9)
+				break;
 		}
 
+		// If bestClosedCount <= 0 => no closed cells in any 3x3, nothing to reveal
+		if (bestClosedCount <= 0)
+			return;
 
+		int centerX = bestCenterX;
+		int centerY = bestCenterY;
 
+		// 2) Reveal as many as possible in that 3x3 (ONLY closed cells)
+		for (int x = Math.max(0, centerX - 1); x <= Math.min(cols - 1, centerX + 1); x++) {
+			for (int y = Math.max(0, centerY - 1); y <= Math.min(rows - 1, centerY + 1); y++) {
 
+				Cell cell = cells[x][y];
+				JButton btn = btns[x][y];
+
+				String content = cell.getContent();
+				if (content == null)
+					content = "";
+
+				// Only reveal cells that are still closed
+				if (!content.equals(""))
+					continue;
+
+				if (cell.getMine()) {
+					btn.setIcon(gui.getIconRedMine());
+					btn.setBackground(new Color(220, 53, 69));
+					cell.setContent("M");
+					continue;
+				}
+
+				int n = cell.getSurroundingMines();
+				cell.setContent(Integer.toString(n));
+
+				btn.setBackground(gui.CELL_REVEALED);
+				if (n == 0) {
+					btn.setText("·");
+				} else {
+					btn.setText(Integer.toString(n));
+					gui.setTextColor(btn);
+				}
+			}
+		}
+	}
+
+	private JButton getButtonForCell(Cell cell) {
+		for (int x = 0; x < boardA.getCols(); x++) {
+			for (int y = 0; y < boardA.getRows(); y++) {
+				if (boardA.getCells()[x][y] == cell) {
+					return gui.getButtonsA()[x][y];
+				}
+				if (boardB.getCells()[x][y] == cell) {
+					return gui.getButtonsB()[x][y];
+				}
+			}
+		}
+		return null;
+	}
+
+	private Board getBoardForCell(Cell cell) {
+		for (int x = 0; x < boardA.getCols(); x++) {
+			for (int y = 0; y < boardA.getRows(); y++) {
+				if (boardA.getCells()[x][y] == cell)
+					return boardA;
+				if (boardB.getCells()[x][y] == cell)
+					return boardB;
+			}
+		}
+		return null;
+	}
+
+	private int[] getCellCoordinates(Cell cell, Board board) {
+		for (int x = 0; x < board.getCols(); x++) {
+			for (int y = 0; y < board.getRows(); y++) {
+				if (board.getCells()[x][y] == cell) {
+					return new int[] { x, y };
+				}
+			}
+		}
+		return null;
+	}
 
 	@Override
 	public void mousePressed(MouseEvent e) {
@@ -1239,56 +1495,48 @@ public class Game implements MouseListener, ActionListener, WindowListener {
 	@Override
 	public void windowDeactivated(WindowEvent e) {
 	}
-	
 
-
-
-
-	
-	
 	public SysData getSysData() {
-	    return sysData;
+		return sysData;
 	}
 
 	public MineSweeper getGui() {
-	    return gui;
+		return gui;
 	}
 
 	public Difficulty getDifficulty() {
-	    return currentDifficulty;
+		return currentDifficulty;
 	}
 
 	public Player getPlayer1() {
-	    return player1;
+		return player1;
 	}
 
 	public Player getPlayer2() {
-	    return player2;
+		return player2;
 	}
 
 	public int getSharedScore() {
-	    return sharedScore;
+		return sharedScore;
 	}
-	
-	
-	
+
 	public void goToMainMenu() {
-	    // Stop the timer safely
-	    gui.interruptTimer();
+		// Stop the timer safely
+		gui.interruptTimer();
 
-	    // Reset game state
-	    gameOver = true;
+		// Reset game state
+		gameOver = true;
 
-	    // Switch back to main menu UI
-	    gui.goToMainPage();
+		// Switch back to main menu UI
+		gui.goToMainPage();
 	}
-	
-  public boolean isGameOver() {
-	    return gameOver;
+
+	public boolean isGameOver() {
+		return gameOver;
 	}
 
 	public void setGameOver(boolean gameOver) {
-	    this.gameOver = gameOver;
+		this.gameOver = gameOver;
 	}
 
 }
