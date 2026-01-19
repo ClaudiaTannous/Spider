@@ -2,15 +2,19 @@ package model;
 
 public enum SpecialBoxType {
     NONE,
-    SURPRISE,    
-    QUESTION;    
-    
+    SURPRISE,
+    QUESTION,
+    HEART,
+    DICE;
+
     @Override
     public String toString() {
-        switch(this) {
-            case SURPRISE: return "S";
-            case QUESTION: return "Q";
-            default: return "";
-        }
+        return switch (this) {
+            case SURPRISE -> "S";
+            case QUESTION -> "Q";
+            case HEART   -> "H";
+            case DICE    -> "D";
+            default      -> "";
+        };
     }
 }

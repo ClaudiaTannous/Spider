@@ -546,15 +546,8 @@ public class PlayerSetupView extends JFrame {
         resetFieldBorder(player2Field);
 
         boolean valid = true;
-
-        if (p1Name.isEmpty()) {
-            markFieldAsError(player1Field);
-            valid = false;
-        }
-        if (p2Name.isEmpty()) {
-            markFieldAsError(player2Field);
-            valid = false;
-        }
+        if (p1Name.isEmpty()) { markFieldAsError(player1Field); valid = false; }
+        if (p2Name.isEmpty()) { markFieldAsError(player2Field); valid = false; }
 
         if (!valid) {
             JOptionPane.showMessageDialog(
@@ -563,11 +556,6 @@ public class PlayerSetupView extends JFrame {
                     "Missing Player Name",
                     JOptionPane.WARNING_MESSAGE
             );
-            if (p1Name.isEmpty()) {
-                player1Field.requestFocus();
-            } else {
-                player2Field.requestFocus();
-            }
             return;
         }
 
@@ -582,13 +570,36 @@ public class PlayerSetupView extends JFrame {
             return;
         }
 
-        // Save chosen board colors so MineSweeper can use them
         player1BoardColorChoice = BOARD_COLORS[p1ColorIndex];
         player2BoardColorChoice = BOARD_COLORS[p2ColorIndex];
 
-        new Game(difficulty, p1Name, p2Name);
-        dispose();
+        // show modeless loading (animation works)
+        JDialog loading = createLoadingDialog();
+        loading.setVisible(true);
+
+        // ✅ run game creation off the EDT so UI stays animated
+        new SwingWorker<Game, Void>() {
+            @Override
+            protected Game doInBackground() {
+                return new Game(difficulty, p1Name, p2Name);
+            }
+
+            @Override
+            protected void done() {
+                try {
+                    Game g = get();
+                    // if you use async init, start it:
+                    // g.startGameAsync();
+                } catch (Exception ignored) {}
+
+                loading.dispose();
+                dispose();
+            }
+        }.execute();
     }
+
+
+
 
     private void onBackToMainMenu() {
         MainPage mainPage = new MainPage();
@@ -697,4 +708,54 @@ public class PlayerSetupView extends JFrame {
             view.setVisible(true);
         });
     }
+    private JDialog createLoadingDialog() {
+        // ❗ modeless (false) so animation timer can run
+        JDialog dialog = new JDialog(this, "Loading", false);
+        dialog.setUndecorated(true);
+        dialog.setAlwaysOnTop(true);
+
+        JPanel panel = new JPanel(new BorderLayout(10, 10));
+        panel.setBorder(BorderFactory.createCompoundBorder(
+                BorderFactory.createLineBorder(Color.DARK_GRAY, 2, true),
+                BorderFactory.createEmptyBorder(20, 30, 20, 30)
+        ));
+        panel.setBackground(new Color(30, 30, 30));
+
+        JLabel label = new JLabel("Starting game, please wait...");
+        label.setForeground(Color.WHITE);
+        label.setFont(new Font("Segoe UI", Font.BOLD, 16));
+        label.setHorizontalAlignment(SwingConstants.CENTER);
+
+        JProgressBar bar = new JProgressBar();
+        bar.setIndeterminate(true);
+        bar.setBorderPainted(false);
+        bar.setBackground(new Color(60, 60, 60));
+        bar.setForeground(new Color(120, 200, 180));
+
+        panel.add(label, BorderLayout.NORTH);
+        panel.add(bar, BorderLayout.CENTER);
+
+        dialog.setContentPane(panel);
+        dialog.pack();
+        dialog.setLocationRelativeTo(this);
+
+        // ✅ bounce timer
+        Point base = dialog.getLocation();
+        final int[] dy = {1};
+        javax.swing.Timer bounce = new javax.swing.Timer(40, e -> {
+            dialog.setLocation(base.x, base.y + dy[0]);
+            if (Math.abs(dialog.getLocation().y - base.y) > 8) dy[0] *= -1;
+        });
+        bounce.start();
+
+        // stop timer when dialog closes
+        dialog.addWindowListener(new java.awt.event.WindowAdapter() {
+            @Override public void windowClosed(java.awt.event.WindowEvent e) { bounce.stop(); }
+        });
+
+        return dialog;
+    }
+
+
+
 }

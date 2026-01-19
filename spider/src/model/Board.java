@@ -10,8 +10,12 @@ public class Board {
     private Cell[][] cells;
     private int rows;
     private int cols;
+
     private int surpriseBoxes;
     private int questionBoxes;
+    private int heartBoxes;  // ❤️
+    private int diceBoxes;   // 🎲 NEW
+
     private Difficulty difficulty;
 
     public Board(Difficulty difficulty) {
@@ -19,18 +23,20 @@ public class Board {
         this.rows = difficulty.getRows();
         this.cols = difficulty.getCols();
         this.numberOfMines = difficulty.getMines();
+
         this.surpriseBoxes = difficulty.getSurpriseBoxes();
         this.questionBoxes = difficulty.getQuestionBoxes();
+        this.heartBoxes = difficulty.getHeartBoxes();
+        this.diceBoxes  = difficulty.getDiceBoxes(); // 🎲 NEW
 
         cells = new Cell[cols][rows];
 
         createEmptyCells();
-        setSpecialBoxes();        
-        setMines();               
+        setSpecialBoxes();
+        setMines();
         setSurroundingMinesNumber();
     }
 
-    
     private void createEmptyCells() {
         for (int x = 0; x < cols; x++) {
             for (int y = 0; y < rows; y++) {
@@ -40,11 +46,11 @@ public class Board {
         }
     }
 
-   
     private void setSpecialBoxes() {
         Random rand = new Random();
         List<String> usedPositions = new ArrayList<>();
 
+        // SURPRISE
         int currentSurprise = 0;
         while (currentSurprise < surpriseBoxes) {
             int x = rand.nextInt(cols);
@@ -60,6 +66,7 @@ public class Board {
             }
         }
 
+        // QUESTION
         int currentQuestion = 0;
         while (currentQuestion < questionBoxes) {
             int x = rand.nextInt(cols);
@@ -74,9 +81,40 @@ public class Board {
                 currentQuestion++;
             }
         }
+
+        // HEART ❤️
+        int currentHeart = 0;
+        while (currentHeart < heartBoxes) {
+            int x = rand.nextInt(cols);
+            int y = rand.nextInt(rows);
+            String pos = x + "," + y;
+
+            if (!usedPositions.contains(pos)
+                    && cells[x][y].getSpecialBox() == SpecialBoxType.NONE) {
+
+                cells[x][y].setSpecialBox(SpecialBoxType.HEART);
+                usedPositions.add(pos);
+                currentHeart++;
+            }
+        }
+
+        // DICE 🎲 NEW (player chooses what it becomes later)
+        int currentDice = 0;
+        while (currentDice < diceBoxes) {
+            int x = rand.nextInt(cols);
+            int y = rand.nextInt(rows);
+            String pos = x + "," + y;
+
+            if (!usedPositions.contains(pos)
+                    && cells[x][y].getSpecialBox() == SpecialBoxType.NONE) {
+
+                cells[x][y].setSpecialBox(SpecialBoxType.DICE);
+                usedPositions.add(pos);
+                currentDice++;
+            }
+        }
     }
 
-    
     private void setMines() {
         Random rand = new Random();
         int currentMines = 0;
@@ -99,7 +137,6 @@ public class Board {
         }
     }
 
-   
     private boolean hasSpecialNeighbor(int x, int y) {
         for (int dx = -1; dx <= 1; dx++) {
             for (int dy = -1; dy <= 1; dy++) {
@@ -111,7 +148,10 @@ public class Board {
                     continue;
 
                 SpecialBoxType s = cells[nx][ny].getSpecialBox();
-                if (s == SpecialBoxType.QUESTION || s == SpecialBoxType.SURPRISE) {
+                if (s == SpecialBoxType.QUESTION
+                        || s == SpecialBoxType.SURPRISE
+                        || s == SpecialBoxType.HEART
+                        || s == SpecialBoxType.DICE) { // 🎲 NEW
                     return true;
                 }
             }
@@ -119,7 +159,6 @@ public class Board {
         return false;
     }
 
-    
     private void setSurroundingMinesNumber() {
         for (int x = 0; x < cols; x++) {
             for (int y = 0; y < rows; y++) {
@@ -147,7 +186,6 @@ public class Board {
         return neighbours;
     }
 
-   
     public int makeValidCoordinateX(int i) {
         if (i < 0) return 0;
         if (i > cols - 1) return cols - 1;
@@ -160,7 +198,6 @@ public class Board {
         return i;
     }
 
-   
     public void resetBoard() {
         for (int x = 0; x < cols; x++) {
             for (int y = 0; y < rows; y++) {
@@ -176,7 +213,6 @@ public class Board {
         setSurroundingMinesNumber();
     }
 
-    
     public Cell[][] getCells() {
         return cells;
     }
