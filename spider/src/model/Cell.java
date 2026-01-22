@@ -22,7 +22,7 @@ public class Cell
     private int surroundingMines;
 
     
-    //----------------------------------------------------------//
+  
 
     public Cell()
     {
@@ -35,7 +35,7 @@ public class Cell
 
 
     
-    //-------------GETTERS AND SETTERS----------------------------//
+    //GETTERS AND SETTERS
     public boolean getMine()
     {
         return mine;
@@ -78,5 +78,5 @@ public class Cell
         this.surroundingMines = surroundingMines;
     }
 
-    //-------------------------------------------------------------//
+    
 }

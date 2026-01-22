@@ -577,7 +577,7 @@ public class PlayerSetupView extends JFrame {
         JDialog loading = createLoadingDialog();
         loading.setVisible(true);
 
-        // ✅ run game creation off the EDT so UI stays animated
+        //  run game creation off the EDT so UI stays animated
         new SwingWorker<Game, Void>() {
             @Override
             protected Game doInBackground() {
@@ -588,8 +588,7 @@ public class PlayerSetupView extends JFrame {
             protected void done() {
                 try {
                     Game g = get();
-                    // if you use async init, start it:
-                    // g.startGameAsync();
+                    
                 } catch (Exception ignored) {}
 
                 loading.dispose();
@@ -693,7 +692,7 @@ public class PlayerSetupView extends JFrame {
         }
     }
 
-    // Optional getters if you want to read colors from outside
+    
     public static Color getPlayer1BoardColorChoice() {
         return player1BoardColorChoice;
     }
@@ -739,7 +738,7 @@ public class PlayerSetupView extends JFrame {
         dialog.pack();
         dialog.setLocationRelativeTo(this);
 
-        // ✅ bounce timer
+       
         Point base = dialog.getLocation();
         final int[] dy = {1};
         javax.swing.Timer bounce = new javax.swing.Timer(40, e -> {

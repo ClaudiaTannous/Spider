@@ -44,8 +44,8 @@ public enum Difficulty {
     private final int questionBoxes;   // Q cells
     private final int questionPoints;  // Points used for question-related scoring
     private final int surprisePoints;  // Points for good surprise
-    private final int heartBoxes;      // ❤️ HEART cells
-    private final int diceBoxes;       // 🎲 DICE cells
+    private final int heartBoxes;      //  HEART cells
+    private final int diceBoxes;       // DICE cells
 
     Difficulty(int rows,
                int cols,

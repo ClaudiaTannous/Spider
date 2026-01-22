@@ -137,7 +137,7 @@ public class MineSweeper extends JFrame implements GameObserver {
     private static final int FONT_SCORE = 20;
     private static final int FONT_HEARTS = 18;
 
-    private static final int CELL_SIZE = 46; // was 50
+    private static final int CELL_SIZE = 46; 
 
     public MineSweeper() {
         this(null, 9, 9, 10, "Player 1", "Player 2");
@@ -169,14 +169,14 @@ public class MineSweeper extends JFrame implements GameObserver {
         mainContainer.setBorder(new EmptyBorder(30, 30, 30, 30));
 
         JPanel headerPanel = createHeaderPanel(); // Minesweeper + Flag mode only
-        JPanel keysPanel = createKeysLegendPanel(); // "KEYS" + legend row
+        JPanel keysPanel = createKeysLegendPanel(); 
 
         JPanel topWrapper = new JPanel();
         topWrapper.setLayout(new BoxLayout(topWrapper, BoxLayout.Y_AXIS));
         topWrapper.setOpaque(false);
 
         topWrapper.add(headerPanel);
-        topWrapper.add(Box.createVerticalStrut(8)); // small gap
+        topWrapper.add(Box.createVerticalStrut(8)); 
         topWrapper.add(keysPanel);
         JPanel hintPanel = createHintPanel();
         topWrapper.add(hintPanel);
@@ -236,7 +236,7 @@ public class MineSweeper extends JFrame implements GameObserver {
 
     private JPanel createHorizontalLegendBar() {
 
-        JPanel bar = new JPanel(new GridLayout(1, 6, 20, 0)); // ✅ 6 now
+        JPanel bar = new JPanel(new GridLayout(1, 6, 20, 0)); 
         bar.setOpaque(false);
         bar.setBorder(new EmptyBorder(0, 0, 0, 0));
 
@@ -244,7 +244,7 @@ public class MineSweeper extends JFrame implements GameObserver {
         legendQuestionsCountLabel = new JLabel("--");
         legendSurprisesCountLabel = new JLabel("--");
         legendHeartsCountLabel = new JLabel("--");
-        legendDiceCountLabel = new JLabel("--"); // 🎲 NEW
+        legendDiceCountLabel = new JLabel("--"); 
 
         Font valueFont = new Font("Segoe UI", Font.BOLD, 16);
 
@@ -252,22 +252,22 @@ public class MineSweeper extends JFrame implements GameObserver {
         legendQuestionsCountLabel.setFont(valueFont);
         legendSurprisesCountLabel.setFont(valueFont);
         legendHeartsCountLabel.setFont(valueFont);
-        legendDiceCountLabel.setFont(valueFont); // 🎲 NEW
+        legendDiceCountLabel.setFont(valueFont); 
 
         legendMinesCountLabel.setForeground(TEXT_WHITE);
         legendQuestionsCountLabel.setForeground(TEXT_WHITE);
         legendSurprisesCountLabel.setForeground(TEXT_WHITE);
         legendHeartsCountLabel.setForeground(TEXT_WHITE);
-        legendDiceCountLabel.setForeground(TEXT_WHITE); // 🎲 NEW
+        legendDiceCountLabel.setForeground(TEXT_WHITE); 
 
         bar.add(makeLegendIconStat(legendMineIcon, legendMinesCountLabel, MINE_BG));
         bar.add(makeLegendIconStat(legendQuestionIcon, legendQuestionsCountLabel, Q_HIGHLIGHT));
         bar.add(makeLegendIconStat(legendBoxIcon, legendSurprisesCountLabel, S_HIGHLIGHT));
         bar.add(makeLegendIconStat(legendHeartIcon, legendHeartsCountLabel, new Color(183, 28, 28)));
 
-        bar.add(makeLegendIconStat(legendDiceIcon, legendDiceCountLabel, new Color(25, 38, 56))); // 🎲 NEW
+        bar.add(makeLegendIconStat(legendDiceIcon, legendDiceCountLabel, new Color(25, 38, 56))); 
 
-        bar.add(makeLegendIconOnly(legendFlagIcon, new Color(25, 38, 56))); // 🚩 no number
+        bar.add(makeLegendIconOnly(legendFlagIcon, new Color(25, 38, 56))); 
 
         return bar;
     }
@@ -312,13 +312,13 @@ public class MineSweeper extends JFrame implements GameObserver {
         badge.setPreferredSize(new Dimension(44, 32));
         badge.setOpaque(true);
         badge.setBackground(badgeBg);
-        badge.setBorder(null); // no border if you want
+        badge.setBorder(null); 
         inner.add(badge);
 
         valueLabel.setBorder(null);
         inner.add(valueLabel);
 
-        return inner; // ✅ no GridBag wrapper
+        return inner; 
     }
 
     private JPanel makeLegendIconOnly(Icon icon, Color badgeBg) {
@@ -490,7 +490,7 @@ public class MineSweeper extends JFrame implements GameObserver {
                 new EmptyBorder(6, 12, 6, 12)));
         hintMineButton.addActionListener(e -> {
             if (game != null) {
-                game.useMineHint(); // implement in Game (controller)
+                game.useMineHint(); 
             }
         });
 
@@ -612,7 +612,7 @@ public class MineSweeper extends JFrame implements GameObserver {
         helpButton.setFocusPainted(false);
         helpButton.setOpaque(true);
         helpButton.setContentAreaFilled(true);
-        helpButton.setBackground(new Color(25, 38, 56)); // dark
+        helpButton.setBackground(new Color(25, 38, 56)); 
 
         helpButton.setBorder(BorderFactory.createCompoundBorder(
                 new LineBorder(new Color(255, 202, 40), 2, true),  // gold border

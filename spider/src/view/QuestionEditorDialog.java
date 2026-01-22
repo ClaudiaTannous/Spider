@@ -31,7 +31,7 @@ public class QuestionEditorDialog extends JDialog {
     private JButton btnDelete;
     private JButton btnCancel;
 
-    // --- Color palette from "Modern Dark Mode Pale" ---
+    // --- Color palette ---
     private static final Color BG_MAIN         = new Color(0x08, 0x13, 0x1E); // Background
     private static final Color CARD_BG         = new Color(0x0D, 0x2A, 0x38); // base glass tint
     private static final Color ROW_ODD         = new Color(0x1F, 0x33, 0x40); // Hidden Cell

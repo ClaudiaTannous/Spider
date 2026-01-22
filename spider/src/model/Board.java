@@ -13,8 +13,8 @@ public class Board {
 
     private int surpriseBoxes;
     private int questionBoxes;
-    private int heartBoxes;  // ❤️
-    private int diceBoxes;   // 🎲 NEW
+    private int heartBoxes;  
+    private int diceBoxes;   
 
     private Difficulty difficulty;
 
@@ -27,7 +27,7 @@ public class Board {
         this.surpriseBoxes = difficulty.getSurpriseBoxes();
         this.questionBoxes = difficulty.getQuestionBoxes();
         this.heartBoxes = difficulty.getHeartBoxes();
-        this.diceBoxes  = difficulty.getDiceBoxes(); // 🎲 NEW
+        this.diceBoxes  = difficulty.getDiceBoxes(); 
 
         cells = new Cell[cols][rows];
 
@@ -82,7 +82,7 @@ public class Board {
             }
         }
 
-        // HEART ❤️
+        // HEART 
         int currentHeart = 0;
         while (currentHeart < heartBoxes) {
             int x = rand.nextInt(cols);
@@ -98,7 +98,7 @@ public class Board {
             }
         }
 
-        // DICE 🎲 NEW (player chooses what it becomes later)
+        // DICE 
         int currentDice = 0;
         while (currentDice < diceBoxes) {
             int x = rand.nextInt(cols);
@@ -151,7 +151,7 @@ public class Board {
                 if (s == SpecialBoxType.QUESTION
                         || s == SpecialBoxType.SURPRISE
                         || s == SpecialBoxType.HEART
-                        || s == SpecialBoxType.DICE) { // 🎲 NEW
+                        || s == SpecialBoxType.DICE) { 
                     return true;
                 }
             }
